@@ -1,0 +1,30 @@
+table:
+  name: crm_files
+  schema: public
+object_relationships:
+  - name: user
+    using:
+      foreign_key_constraint_on: uploaded_by
+array_relationships:
+  - name: crm_property_files
+    using:
+      foreign_key_constraint_on:
+        column: file_id
+        table:
+          name: crm_property_files
+          schema: public
+event_triggers:
+  - name: on_crm_files_change
+    definition:
+      delete:
+        columns: '*'
+      enable_manual: false
+      insert:
+        columns: '*'
+      update:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 5
+      timeout_sec: 60
+    webhook: https://beacon-leads-ai-backend-663034886613.us-central1.run.app/api/webhooks/crm-files

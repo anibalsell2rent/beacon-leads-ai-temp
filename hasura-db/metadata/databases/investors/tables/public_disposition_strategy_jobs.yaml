@@ -1,0 +1,3 @@
+table:
+  name: disposition_strategy_jobs
+  schema: public

@@ -1,0 +1,18 @@
+table:
+  name: roles
+  schema: public
+array_relationships:
+  - name: crm_employees
+    using:
+      foreign_key_constraint_on:
+        column: role_id
+        table:
+          name: crm_employees
+          schema: public
+  - name: crm_user_roles
+    using:
+      foreign_key_constraint_on:
+        column: role_id
+        table:
+          name: crm_user_roles
+          schema: public

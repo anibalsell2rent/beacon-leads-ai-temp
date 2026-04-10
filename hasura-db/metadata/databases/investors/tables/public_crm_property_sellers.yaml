@@ -1,0 +1,10 @@
+table:
+  name: crm_property_sellers
+  schema: public
+object_relationships:
+  - name: crm_seller
+    using:
+      foreign_key_constraint_on: seller_id
+  - name: property
+    using:
+      foreign_key_constraint_on: property_id

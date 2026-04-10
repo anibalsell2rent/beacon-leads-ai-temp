@@ -1,0 +1,3 @@
+table:
+  name: agno_metrics
+  schema: public

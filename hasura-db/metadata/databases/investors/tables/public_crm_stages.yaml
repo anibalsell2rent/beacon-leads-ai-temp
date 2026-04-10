@@ -1,0 +1,25 @@
+table:
+  name: crm_stages
+  schema: public
+array_relationships:
+  - name: crmLeadsByStageId
+    using:
+      foreign_key_constraint_on:
+        column: stage_id
+        table:
+          name: crm_leads
+          schema: public
+  - name: crm_deals
+    using:
+      foreign_key_constraint_on:
+        column: stage_id
+        table:
+          name: crm_deals
+          schema: public
+  - name: crm_leads
+    using:
+      foreign_key_constraint_on:
+        column: previous_stage_id
+        table:
+          name: crm_leads
+          schema: public

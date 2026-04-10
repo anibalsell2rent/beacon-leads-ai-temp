@@ -1,0 +1,3 @@
+table:
+  name: dialpad_sms_events
+  schema: public

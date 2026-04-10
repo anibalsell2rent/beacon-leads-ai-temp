@@ -1,0 +1,7 @@
+table:
+  name: mst_field_mappings
+  schema: public
+object_relationships:
+  - name: mst_data_source
+    using:
+      foreign_key_constraint_on: data_source_id

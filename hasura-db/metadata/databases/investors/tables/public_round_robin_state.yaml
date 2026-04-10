@@ -1,0 +1,7 @@
+table:
+  name: round_robin_state
+  schema: public
+object_relationships:
+  - name: user
+    using:
+      foreign_key_constraint_on: last_assigned_user_id

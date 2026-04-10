@@ -1,0 +1,18 @@
+table:
+  name: mst_data_sources
+  schema: public
+array_relationships:
+  - name: mst_campaigns
+    using:
+      foreign_key_constraint_on:
+        column: data_source_id
+        table:
+          name: mst_campaigns
+          schema: public
+  - name: mst_field_mappings
+    using:
+      foreign_key_constraint_on:
+        column: data_source_id
+        table:
+          name: mst_field_mappings
+          schema: public

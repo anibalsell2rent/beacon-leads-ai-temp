@@ -1,0 +1,11 @@
+table:
+  name: sync_sessions
+  schema: public
+array_relationships:
+  - name: sync_records
+    using:
+      foreign_key_constraint_on:
+        column: sync_session_id
+        table:
+          name: sync_records
+          schema: public

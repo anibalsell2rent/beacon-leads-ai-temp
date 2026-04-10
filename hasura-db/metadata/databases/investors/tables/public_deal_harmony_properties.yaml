@@ -1,0 +1,36 @@
+table:
+  name: deal_harmony_properties
+  schema: public
+object_relationships:
+  - name: property
+    using:
+      foreign_key_constraint_on: property_id
+array_relationships:
+  - name: deal_harmony_custom_expenses
+    using:
+      foreign_key_constraint_on:
+        column: deal_harmony_property_id
+        table:
+          name: deal_harmony_custom_expenses
+          schema: public
+  - name: deal_harmony_custom_scenarios
+    using:
+      foreign_key_constraint_on:
+        column: deal_harmony_property_id
+        table:
+          name: deal_harmony_custom_scenarios
+          schema: public
+  - name: deal_harmony_documents
+    using:
+      foreign_key_constraint_on:
+        column: deal_harmony_property_id
+        table:
+          name: deal_harmony_documents
+          schema: public
+  - name: deal_harmony_offers
+    using:
+      foreign_key_constraint_on:
+        column: deal_harmony_property_id
+        table:
+          name: deal_harmony_offers
+          schema: public

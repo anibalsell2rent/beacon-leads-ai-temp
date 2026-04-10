@@ -1,0 +1,188 @@
+table:
+  name: properties
+  schema: public
+object_relationships:
+  - name: condition_rating
+    using:
+      foreign_key_constraint_on: condition_rating_id
+  - name: crm_ac_type
+    using:
+      foreign_key_constraint_on: ac_type_id
+  - name: crm_foundation_type
+    using:
+      foreign_key_constraint_on: foundation_type_id
+  - name: crm_heating_type
+    using:
+      foreign_key_constraint_on: heating_type_id
+  - name: crm_occupancy_type
+    using:
+      foreign_key_constraint_on: occupancy_type_id
+  - name: crm_property_type
+    using:
+      foreign_key_constraint_on: property_type_id
+  - name: crm_roof_type
+    using:
+      foreign_key_constraint_on: roof_type_id
+  - name: deal_harmony_property
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: deal_harmony_properties
+          schema: public
+  - name: flood_zone
+    using:
+      foreign_key_constraint_on: flood_zone_id
+  - name: hoa_frequency
+    using:
+      foreign_key_constraint_on: hoa_frequency_id
+  - name: solar_ownership_type
+    using:
+      foreign_key_constraint_on: solar_ownership_id
+  - name: transaction_coordinator_mandatory_file
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: transaction_coordinator_mandatory_files
+          schema: public
+  - name: zoning_type
+    using:
+      foreign_key_constraint_on: zoning_type_id
+array_relationships:
+  - name: campaigns
+    using:
+      manual_configuration:
+        column_mapping:
+          deal_number: deal_id
+        insertion_order: null
+        remote_table:
+          name: mst_campaign_ai_calling
+          schema: public
+  - name: crm_activities
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_activities
+          schema: public
+  - name: crm_leads
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_leads
+          schema: public
+  - name: crm_property_files
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_files
+          schema: public
+  - name: crm_property_financials
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_financials
+          schema: public
+  - name: crm_property_foreclosures
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_foreclosures
+          schema: public
+  - name: crm_property_investor_offers
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_investor_offers
+          schema: public
+  - name: crm_property_liens
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_liens
+          schema: public
+  - name: crm_property_mortgages
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_mortgages
+          schema: public
+  - name: crm_property_realtor_infos
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_realtor_info
+          schema: public
+  - name: crm_property_sellers
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_sellers
+          schema: public
+  - name: crm_property_valuations
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_property_valuations
+          schema: public
+  - name: crm_transactions
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: crm_transactions
+          schema: public
+  - name: property_origins
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: property_origins
+          schema: public
+  - name: property_top_buyers
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: property_top_buyers
+          schema: public
+  - name: transactions
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: transactions
+          schema: public
+  - name: transcribed_conversations
+    using:
+      foreign_key_constraint_on:
+        column: property_id
+        table:
+          name: transcribed_conversations
+          schema: public
+event_triggers:
+  - name: on_properties_change
+    definition:
+      delete:
+        columns: '*'
+      enable_manual: false
+      insert:
+        columns: '*'
+      update:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 5
+      timeout_sec: 60
+    webhook: https://beacon-leads-ai-backend-663034886613.us-central1.run.app/api/webhooks/properties

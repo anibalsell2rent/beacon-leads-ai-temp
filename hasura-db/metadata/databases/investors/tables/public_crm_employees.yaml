@@ -1,0 +1,77 @@
+table:
+  name: crm_employees
+  schema: public
+object_relationships:
+  - name: crm_employee
+    using:
+      foreign_key_constraint_on: manager_id
+  - name: role
+    using:
+      foreign_key_constraint_on: role_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+array_relationships:
+  - name: crmDealsBySellerAdvisorId
+    using:
+      foreign_key_constraint_on:
+        column: seller_advisor_id
+        table:
+          name: crm_deals
+          schema: public
+  - name: crmDealsByTransactionCoordinatorId
+    using:
+      foreign_key_constraint_on:
+        column: transaction_coordinator_id
+        table:
+          name: crm_deals
+          schema: public
+  - name: crmLeadsByInvestorAdvisorId
+    using:
+      foreign_key_constraint_on:
+        column: investor_advisor_id
+        table:
+          name: crm_leads
+          schema: public
+  - name: crmLeadsBySellerAdvisorId
+    using:
+      foreign_key_constraint_on:
+        column: seller_advisor_id
+        table:
+          name: crm_leads
+          schema: public
+  - name: crmLeadsBySellerManagerId
+    using:
+      foreign_key_constraint_on:
+        column: seller_manager_id
+        table:
+          name: crm_leads
+          schema: public
+  - name: crmLeadsByTransactionCoordinatorId
+    using:
+      foreign_key_constraint_on:
+        column: transaction_coordinator_id
+        table:
+          name: crm_leads
+          schema: public
+  - name: crm_deals
+    using:
+      foreign_key_constraint_on:
+        column: investor_advisor_id
+        table:
+          name: crm_deals
+          schema: public
+  - name: crm_employees
+    using:
+      foreign_key_constraint_on:
+        column: manager_id
+        table:
+          name: crm_employees
+          schema: public
+  - name: crm_leads
+    using:
+      foreign_key_constraint_on:
+        column: cold_outreach_specialist_id
+        table:
+          name: crm_leads
+          schema: public

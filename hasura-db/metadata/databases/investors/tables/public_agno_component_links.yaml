@@ -1,0 +1,17 @@
+table:
+  name: agno_component_links
+  schema: public
+object_relationships:
+  - name: agno_component
+    using:
+      foreign_key_constraint_on: child_component_id
+  - name: agno_component_config
+    using:
+      manual_configuration:
+        column_mapping:
+          parent_component_id: component_id
+          parent_version: version
+        insertion_order: null
+        remote_table:
+          name: agno_component_configs
+          schema: public

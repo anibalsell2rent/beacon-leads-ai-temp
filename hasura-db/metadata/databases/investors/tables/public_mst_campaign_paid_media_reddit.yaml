@@ -1,0 +1,7 @@
+table:
+  name: mst_campaign_paid_media_reddit
+  schema: public
+object_relationships:
+  - name: mst_campaign
+    using:
+      foreign_key_constraint_on: campaign_id

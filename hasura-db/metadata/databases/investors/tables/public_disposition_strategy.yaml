@@ -1,0 +1,11 @@
+table:
+  name: disposition_strategy
+  schema: public
+array_relationships:
+  - name: marketings
+    using:
+      foreign_key_constraint_on:
+        column: disposition_id
+        table:
+          name: marketing
+          schema: public

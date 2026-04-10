@@ -1,0 +1,3 @@
+table:
+  name: platform_performance_monthly
+  schema: public

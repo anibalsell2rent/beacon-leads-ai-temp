@@ -1,0 +1,7 @@
+table:
+  name: agno_spans
+  schema: public
+object_relationships:
+  - name: agno_trace
+    using:
+      foreign_key_constraint_on: trace_id

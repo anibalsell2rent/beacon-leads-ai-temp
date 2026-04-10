@@ -1,0 +1,7 @@
+table:
+  name: leads
+  schema: public
+object_relationships:
+  - name: crm_campaign
+    using:
+      foreign_key_constraint_on: campaign_id

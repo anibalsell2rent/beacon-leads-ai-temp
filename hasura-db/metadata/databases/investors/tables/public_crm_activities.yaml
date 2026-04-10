@@ -1,0 +1,13 @@
+table:
+  name: crm_activities
+  schema: public
+object_relationships:
+  - name: crm_activity_type
+    using:
+      foreign_key_constraint_on: activity_type_id
+  - name: property
+    using:
+      foreign_key_constraint_on: property_id
+  - name: user
+    using:
+      foreign_key_constraint_on: created_by

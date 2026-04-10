@@ -1,0 +1,10 @@
+table:
+  name: transactions
+  schema: public
+object_relationships:
+  - name: investor
+    using:
+      foreign_key_constraint_on: investor_id
+  - name: property
+    using:
+      foreign_key_constraint_on: property_id

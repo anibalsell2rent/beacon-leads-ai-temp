@@ -1,0 +1,10 @@
+table:
+  name: crm_property_files
+  schema: public
+object_relationships:
+  - name: crm_file
+    using:
+      foreign_key_constraint_on: file_id
+  - name: property
+    using:
+      foreign_key_constraint_on: property_id

@@ -1,0 +1,11 @@
+table:
+  name: mst_skip_tracing_batch_data
+  schema: public
+array_relationships:
+  - name: mst_sellers_properties_pipelines
+    using:
+      foreign_key_constraint_on:
+        column: skip_tracing_id
+        table:
+          name: mst_sellers_properties_pipeline
+          schema: public

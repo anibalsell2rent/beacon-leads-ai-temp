@@ -1,0 +1,11 @@
+table:
+  name: crm_activity_types
+  schema: public
+array_relationships:
+  - name: crm_activities
+    using:
+      foreign_key_constraint_on:
+        column: activity_type_id
+        table:
+          name: crm_activities
+          schema: public

@@ -1,0 +1,3 @@
+table:
+  name: crm_property_comps
+  schema: public

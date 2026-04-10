@@ -1,0 +1,3 @@
+table:
+  name: zoho_token
+  schema: public

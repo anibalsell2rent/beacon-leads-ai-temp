@@ -1,0 +1,3 @@
+table:
+  name: filename_jobs
+  schema: public

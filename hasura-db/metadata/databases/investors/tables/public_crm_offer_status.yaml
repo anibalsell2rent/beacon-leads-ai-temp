@@ -1,0 +1,11 @@
+table:
+  name: crm_offer_status
+  schema: public
+array_relationships:
+  - name: crm_property_investor_offers
+    using:
+      foreign_key_constraint_on:
+        column: status_id
+        table:
+          name: crm_property_investor_offers
+          schema: public

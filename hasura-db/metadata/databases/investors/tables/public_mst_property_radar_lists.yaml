@@ -1,0 +1,3 @@
+table:
+  name: mst_property_radar_lists
+  schema: public

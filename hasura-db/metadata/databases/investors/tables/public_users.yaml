@@ -1,0 +1,95 @@
+table:
+  name: users
+  schema: public
+array_relationships:
+  - name: crmUserRolesByAssignedBy
+    using:
+      foreign_key_constraint_on:
+        column: assigned_by
+        table:
+          name: crm_user_roles
+          schema: public
+  - name: crm_activities
+    using:
+      foreign_key_constraint_on:
+        column: created_by
+        table:
+          name: crm_activities
+          schema: public
+  - name: crm_calendar_events
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: crm_calendar_events
+          schema: public
+  - name: crm_employees
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: crm_employees
+          schema: public
+  - name: crm_files
+    using:
+      foreign_key_constraint_on:
+        column: uploaded_by
+        table:
+          name: crm_files
+          schema: public
+  - name: crm_notifications
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: crm_notifications
+          schema: public
+  - name: crm_property_investor_offers
+    using:
+      foreign_key_constraint_on:
+        column: created_by
+        table:
+          name: crm_property_investor_offers
+          schema: public
+  - name: crm_user_roles
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: crm_user_roles
+          schema: public
+  - name: investors
+    using:
+      foreign_key_constraint_on:
+        column: investor_advisor
+        table:
+          name: investors
+          schema: public
+  - name: notifications
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: notifications
+          schema: public
+  - name: refresh_tokens
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: refresh_tokens
+          schema: public
+  - name: round_robin_states
+    using:
+      foreign_key_constraint_on:
+        column: last_assigned_user_id
+        table:
+          name: round_robin_state
+          schema: public
+  - name: transcribed_conversations
+    using:
+      foreign_key_constraint_on:
+        column: modified_by
+        table:
+          name: transcribed_conversations
+          schema: public

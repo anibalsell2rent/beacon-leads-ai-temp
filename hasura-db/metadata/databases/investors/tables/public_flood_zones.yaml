@@ -1,0 +1,11 @@
+table:
+  name: flood_zones
+  schema: public
+array_relationships:
+  - name: properties
+    using:
+      foreign_key_constraint_on:
+        column: flood_zone_id
+        table:
+          name: properties
+          schema: public

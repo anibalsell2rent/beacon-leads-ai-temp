@@ -1,0 +1,3 @@
+table:
+  name: csv_mapping_configurations
+  schema: public

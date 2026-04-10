@@ -1,0 +1,11 @@
+table:
+  name: zoning_types
+  schema: public
+array_relationships:
+  - name: properties
+    using:
+      foreign_key_constraint_on:
+        column: zoning_type_id
+        table:
+          name: properties
+          schema: public

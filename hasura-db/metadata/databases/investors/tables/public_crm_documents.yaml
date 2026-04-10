@@ -1,0 +1,18 @@
+table:
+  name: crm_documents
+  schema: public
+event_triggers:
+  - name: on_crm_documents_trigger
+    definition:
+      delete:
+        columns: '*'
+      enable_manual: false
+      insert:
+        columns: '*'
+      update:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: https://beacon-leads-ai-backend-663034886613.us-central1.run.app/api/webhooks/crm-documents

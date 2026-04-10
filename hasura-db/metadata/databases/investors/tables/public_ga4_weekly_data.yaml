@@ -1,0 +1,3 @@
+table:
+  name: ga4_weekly_data
+  schema: public

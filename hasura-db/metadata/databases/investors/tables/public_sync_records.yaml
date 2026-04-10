@@ -1,0 +1,10 @@
+table:
+  name: sync_records
+  schema: public
+object_relationships:
+  - name: investor
+    using:
+      foreign_key_constraint_on: investor_id
+  - name: sync_session
+    using:
+      foreign_key_constraint_on: sync_session_id

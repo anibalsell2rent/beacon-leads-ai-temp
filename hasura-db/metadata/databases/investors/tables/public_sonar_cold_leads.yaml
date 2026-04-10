@@ -1,0 +1,3 @@
+table:
+  name: sonar_cold_leads
+  schema: public

@@ -1,0 +1,11 @@
+table:
+  name: crm_occupancy_types
+  schema: public
+array_relationships:
+  - name: properties
+    using:
+      foreign_key_constraint_on:
+        column: occupancy_type_id
+        table:
+          name: properties
+          schema: public

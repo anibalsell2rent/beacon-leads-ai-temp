@@ -1,0 +1,11 @@
+table:
+  name: condition_ratings
+  schema: public
+array_relationships:
+  - name: properties
+    using:
+      foreign_key_constraint_on:
+        column: condition_rating_id
+        table:
+          name: properties
+          schema: public

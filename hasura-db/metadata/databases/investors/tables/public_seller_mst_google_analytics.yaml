@@ -1,0 +1,3 @@
+table:
+  name: seller_mst_google_analytics
+  schema: public

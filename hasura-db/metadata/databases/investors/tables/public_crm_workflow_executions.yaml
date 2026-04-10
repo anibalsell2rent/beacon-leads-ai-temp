@@ -1,0 +1,7 @@
+table:
+  name: crm_workflow_executions
+  schema: public
+object_relationships:
+  - name: crm_workflow_rule
+    using:
+      foreign_key_constraint_on: workflow_id

@@ -1,0 +1,15 @@
+table:
+  name: buyboxes
+  schema: public
+object_relationships:
+  - name: investor
+    using:
+      foreign_key_constraint_on: investor_id
+array_relationships:
+  - name: buybox_criteria
+    using:
+      foreign_key_constraint_on:
+        column: buybox_id
+        table:
+          name: buybox_criteria
+          schema: public

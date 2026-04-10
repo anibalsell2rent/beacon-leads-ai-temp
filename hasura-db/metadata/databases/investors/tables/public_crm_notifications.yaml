@@ -1,0 +1,10 @@
+table:
+  name: crm_notifications
+  schema: public
+object_relationships:
+  - name: crm_notification_type
+    using:
+      foreign_key_constraint_on: notification_type_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id

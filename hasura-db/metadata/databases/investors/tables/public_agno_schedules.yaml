@@ -1,0 +1,11 @@
+table:
+  name: agno_schedules
+  schema: public
+array_relationships:
+  - name: agno_schedule_runs
+    using:
+      foreign_key_constraint_on:
+        column: schedule_id
+        table:
+          name: agno_schedule_runs
+          schema: public

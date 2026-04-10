@@ -1,0 +1,7 @@
+table:
+  name: property_origins
+  schema: public
+object_relationships:
+  - name: property
+    using:
+      foreign_key_constraint_on: property_id

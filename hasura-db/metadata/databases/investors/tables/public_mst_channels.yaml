@@ -1,0 +1,11 @@
+table:
+  name: mst_channels
+  schema: public
+array_relationships:
+  - name: mst_campaigns
+    using:
+      foreign_key_constraint_on:
+        column: channel_id
+        table:
+          name: mst_campaigns
+          schema: public

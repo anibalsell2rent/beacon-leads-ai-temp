@@ -1,0 +1,3 @@
+table:
+  name: mst_cold_data_sources
+  schema: public

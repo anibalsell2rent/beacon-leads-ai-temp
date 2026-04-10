@@ -1,0 +1,15 @@
+- name: investors
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        connection_parameters:
+          database: investors
+          host: 34.71.120.212
+          password: Sell2rent1!
+          port: 5432
+          username: postgres
+      isolation_level: read-committed
+      use_prepared_statements: false
+  tables: "!include investors/tables/tables.yaml"
+  functions: "!include investors/functions/functions.yaml"

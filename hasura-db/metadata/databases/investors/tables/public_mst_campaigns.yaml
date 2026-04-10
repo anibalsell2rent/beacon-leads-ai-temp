@@ -1,0 +1,32 @@
+table:
+  name: mst_campaigns
+  schema: public
+object_relationships:
+  - name: mst_channel
+    using:
+      foreign_key_constraint_on: channel_id
+  - name: mst_data_source
+    using:
+      foreign_key_constraint_on: data_source_id
+array_relationships:
+  - name: mst_campaign_human_callings
+    using:
+      foreign_key_constraint_on:
+        column: campaign_id
+        table:
+          name: mst_campaign_human_calling
+          schema: public
+  - name: mst_campaign_paid_media_reddits
+    using:
+      foreign_key_constraint_on:
+        column: campaign_id
+        table:
+          name: mst_campaign_paid_media_reddit
+          schema: public
+  - name: mst_campaign_websites
+    using:
+      foreign_key_constraint_on:
+        column: campaign_id
+        table:
+          name: mst_campaign_website
+          schema: public

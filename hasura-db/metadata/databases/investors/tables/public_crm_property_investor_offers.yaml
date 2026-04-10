@@ -1,0 +1,16 @@
+table:
+  name: crm_property_investor_offers
+  schema: public
+object_relationships:
+  - name: crm_offer_status
+    using:
+      foreign_key_constraint_on: status_id
+  - name: investor
+    using:
+      foreign_key_constraint_on: investor_id
+  - name: property
+    using:
+      foreign_key_constraint_on: property_id
+  - name: user
+    using:
+      foreign_key_constraint_on: created_by

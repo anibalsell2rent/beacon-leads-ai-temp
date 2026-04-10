@@ -1,0 +1,11 @@
+table:
+  name: crm_campaign_mediums
+  schema: public
+array_relationships:
+  - name: crm_campaigns
+    using:
+      foreign_key_constraint_on:
+        column: medium_id
+        table:
+          name: crm_campaigns
+          schema: public

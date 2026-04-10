@@ -1,0 +1,7 @@
+table:
+  name: deal_harmony_documents
+  schema: public
+object_relationships:
+  - name: deal_harmony_property
+    using:
+      foreign_key_constraint_on: deal_harmony_property_id

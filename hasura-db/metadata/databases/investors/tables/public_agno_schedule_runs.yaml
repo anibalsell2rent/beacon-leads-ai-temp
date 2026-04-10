@@ -1,0 +1,7 @@
+table:
+  name: agno_schedule_runs
+  schema: public
+object_relationships:
+  - name: agno_schedule
+    using:
+      foreign_key_constraint_on: schedule_id

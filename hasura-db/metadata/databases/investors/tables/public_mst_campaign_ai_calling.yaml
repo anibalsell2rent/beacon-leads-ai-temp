@@ -1,0 +1,13 @@
+table:
+  name: mst_campaign_ai_calling
+  schema: public
+object_relationships:
+  - name: property
+    using:
+      manual_configuration:
+        column_mapping:
+          deal_id: deal_number
+        insertion_order: null
+        remote_table:
+          name: properties
+          schema: public

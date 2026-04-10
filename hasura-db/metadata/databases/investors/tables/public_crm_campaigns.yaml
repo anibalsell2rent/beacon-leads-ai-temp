@@ -1,0 +1,18 @@
+table:
+  name: crm_campaigns
+  schema: public
+object_relationships:
+  - name: crm_campaign_medium
+    using:
+      foreign_key_constraint_on: medium_id
+  - name: crm_campaign_source
+    using:
+      foreign_key_constraint_on: source_id
+array_relationships:
+  - name: leads
+    using:
+      foreign_key_constraint_on:
+        column: campaign_id
+        table:
+          name: leads
+          schema: public

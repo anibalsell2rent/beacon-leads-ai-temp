@@ -1,0 +1,10 @@
+table:
+  name: mst_sonar_campaign_sellers
+  schema: public
+object_relationships:
+  - name: mst_sellers_properties_pipeline
+    using:
+      foreign_key_constraint_on: seller_id
+  - name: mst_sonar_campaign
+    using:
+      foreign_key_constraint_on: campaign_id

@@ -1,0 +1,7 @@
+table:
+  name: investor_phones
+  schema: public
+object_relationships:
+  - name: investor
+    using:
+      foreign_key_constraint_on: investor_id

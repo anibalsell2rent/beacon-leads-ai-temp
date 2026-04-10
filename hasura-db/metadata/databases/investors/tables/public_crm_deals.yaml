@@ -1,0 +1,34 @@
+table:
+  name: crm_deals
+  schema: public
+object_relationships:
+  - name: crmEmployeeBySellerAdvisorId
+    using:
+      foreign_key_constraint_on: seller_advisor_id
+  - name: crmEmployeeByTransactionCoordinatorId
+    using:
+      foreign_key_constraint_on: transaction_coordinator_id
+  - name: crm_employee
+    using:
+      foreign_key_constraint_on: investor_advisor_id
+  - name: crm_lead
+    using:
+      foreign_key_constraint_on: lead_id
+  - name: crm_stage
+    using:
+      foreign_key_constraint_on: stage_id
+event_triggers:
+  - name: on_crm_deals_trigger
+    definition:
+      delete:
+        columns: '*'
+      enable_manual: false
+      insert:
+        columns: '*'
+      update:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 5
+      timeout_sec: 60
+    webhook: https://beacon-leads-ai-backend-663034886613.us-central1.run.app/api/webhooks/crm-deals

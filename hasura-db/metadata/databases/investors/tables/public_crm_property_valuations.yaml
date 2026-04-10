@@ -1,0 +1,7 @@
+table:
+  name: crm_property_valuations
+  schema: public
+object_relationships:
+  - name: property
+    using:
+      foreign_key_constraint_on: property_id

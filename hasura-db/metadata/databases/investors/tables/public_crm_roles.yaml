@@ -1,0 +1,3 @@
+table:
+  name: crm_roles
+  schema: public

@@ -1,0 +1,3 @@
+table:
+  name: properties_lead_scoring
+  schema: public

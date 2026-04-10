@@ -1,0 +1,3 @@
+table:
+  name: agno_eval_runs
+  schema: public

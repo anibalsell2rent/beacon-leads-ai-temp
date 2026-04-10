@@ -1,0 +1,10 @@
+table:
+  name: deal_harmony_custom_expenses
+  schema: public
+object_relationships:
+  - name: deal_harmony_custom_scenario
+    using:
+      foreign_key_constraint_on: scenario_id
+  - name: deal_harmony_property
+    using:
+      foreign_key_constraint_on: deal_harmony_property_id

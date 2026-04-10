@@ -1,0 +1,10 @@
+table:
+  name: marketing
+  schema: public
+object_relationships:
+  - name: disposition_strategy
+    using:
+      foreign_key_constraint_on: disposition_id
+  - name: investor
+    using:
+      foreign_key_constraint_on: investor_id

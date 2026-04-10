@@ -1,0 +1,13 @@
+table:
+  name: property_buybox_matches
+  schema: public
+object_relationships:
+  - name: investor
+    using:
+      manual_configuration:
+        column_mapping:
+          investor_id: investor_id
+        insertion_order: null
+        remote_table:
+          name: investors
+          schema: public

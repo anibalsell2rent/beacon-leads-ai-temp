@@ -1,0 +1,11 @@
+table:
+  name: hoa_frequencies
+  schema: public
+array_relationships:
+  - name: properties
+    using:
+      foreign_key_constraint_on:
+        column: hoa_frequency_id
+        table:
+          name: properties
+          schema: public

@@ -1,0 +1,3 @@
+table:
+  name: sonar_company_default_filters
+  schema: public

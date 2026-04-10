@@ -1,0 +1,3 @@
+table:
+  name: property_investor_stats
+  schema: public

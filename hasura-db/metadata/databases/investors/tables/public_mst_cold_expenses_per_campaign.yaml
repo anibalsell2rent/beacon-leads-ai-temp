@@ -1,0 +1,7 @@
+table:
+  name: mst_cold_expenses_per_campaign
+  schema: public
+object_relationships:
+  - name: mst_sonar_campaign
+    using:
+      foreign_key_constraint_on: campaign_id

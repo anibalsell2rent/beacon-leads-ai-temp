@@ -1,0 +1,11 @@
+table:
+  name: mst_properties_property_radar
+  schema: public
+object_relationships:
+  - name: mst_sellers_properties_pipeline
+    using:
+      foreign_key_constraint_on:
+        column: property_radar_id
+        table:
+          name: mst_sellers_properties_pipeline
+          schema: public

@@ -1,6 +1,12 @@
 import { gql } from "apollo-server-express";
 
 export const leaderboardTypeDefs = gql`
+  type LeaderboardMetric {
+    actual: Int!
+    target: Int!
+    percentage: Float!
+  }
+
   type SellerAdvisorStats {
     employeeId: ID!
     initials: String
@@ -15,15 +21,21 @@ export const leaderboardTypeDefs = gql`
 
   type SellerManagerStats {
     employeeId: ID!
+    email: String
     initials: String
     name: String
     callsConnected: Int!
     smsSent: Int!
-    offersPresented: Int!
+    firstCallSmsAttempts: LeaderboardMetric!
+    newSellersContacted: LeaderboardMetric!
+    followUpsAttempted: LeaderboardMetric!
+    followUpsConnected: LeaderboardMetric!
+    offersPresented: LeaderboardMetric!
+    offersAccepted: LeaderboardMetric!
+    psasExecuted: LeaderboardMetric!
+    leadsConverted: LeaderboardMetric!
+    totalLeads: Int!
     monthlyOffersGoal: Int!
-    offersAccepted: Int!
-    psasExecuted: Int!
-    leadsConverted: Int!
     conversionPercentage: Float!
   }
 

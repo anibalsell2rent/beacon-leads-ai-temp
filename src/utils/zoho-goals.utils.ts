@@ -170,3 +170,138 @@ export function createMetric(
     conversionRate: conversionRate ? parseFloat(conversionRate.toFixed(1)) : undefined,
   };
 }
+
+// ─── COQL Queries ──────────────────────────────────────────────────────────────
+
+interface COQLResponse {
+  data: Record<string, any>[];
+  info?: { count: number; more_records: boolean };
+}
+
+export async function executeCoqlQuery(query: string): Promise<Record<string, any>[]> {
+  const token = await fetchZohoToken();
+  if (!token) return [];
+
+  try {
+    const response = await axios.post<COQLResponse>(
+      "https://www.zohoapis.com/crm/v3/coql",
+      { select_query: query },
+      {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data?.data ?? [];
+  } catch (error: any) {
+    console.error("[COQL] Query error:", error?.response?.data || error.message);
+    return [];
+  }
+}
+
+function formatDateForCoql(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
+export interface ManagerActuals {
+  attendedBookings: number;
+  offersPresented: number;
+  offersAccepted: number;
+  psasExecuted: number;
+  convertedLeads: number;
+  totalLeads: number;
+}
+
+export async function fetchManagerActualsFromZoho(
+  ownerEmail: string,
+  dateRange: DateRange
+): Promise<ManagerActuals> {
+  const startDate = formatDateForCoql(dateRange.start);
+  const endDate = formatDateForCoql(dateRange.end);
+
+  const queries = {
+    attendedBookings: `
+      SELECT COUNT(id) as count
+      FROM Leads
+      WHERE Seller_Coordinator_Bookings.email = '${ownerEmail}'
+        AND Scheduled_Meeting_For >= '${startDate}'
+        AND Scheduled_Meeting_For <= '${endDate}'
+        AND Booking_Status = 'Attended'
+    `,
+    offersPresented: `
+      SELECT COUNT(id) as count
+      FROM Leads
+      WHERE Seller_Manager.email = '${ownerEmail}'
+        AND S2R_Offer_Presented_Date >= '${startDate}'
+        AND S2R_Offer_Presented_Date <= '${endDate}'
+    `,
+    offersAccepted: `
+      SELECT COUNT(id) as count
+      FROM Leads
+      WHERE Seller_Manager.email = '${ownerEmail}'
+        AND S2R_Offer_Accepted_Date >= '${startDate}'
+        AND S2R_Offer_Accepted_Date <= '${endDate}'
+    `,
+    psasExecuted: `
+      SELECT COUNT(id) as count
+      FROM Leads
+      WHERE Seller_Manager.email = '${ownerEmail}'
+        AND PSA_Execution_Date >= '${startDate}'
+        AND PSA_Execution_Date <= '${endDate}'
+    `,
+    convertedLeads: `
+      SELECT COUNT(id) as count
+      FROM Deals
+      WHERE Seller_Manager.email = '${ownerEmail}'
+        AND Created_Time >= '${startDate}'
+        AND Created_Time <= '${endDate}'
+    `,
+    totalLeads: `
+      SELECT COUNT(id) as count
+      FROM Leads
+      WHERE Seller_Manager.email = '${ownerEmail}'
+        AND Created_Time >= '${startDate}'
+        AND Created_Time <= '${endDate}'
+    `,
+  };
+
+  const [
+    attendedBookingsRes,
+    offersPresentedRes,
+    offersAcceptedRes,
+    psasExecutedRes,
+    convertedLeadsRes,
+    totalLeadsRes,
+  ] = await Promise.all([
+    executeCoqlQuery(queries.attendedBookings),
+    executeCoqlQuery(queries.offersPresented),
+    executeCoqlQuery(queries.offersAccepted),
+    executeCoqlQuery(queries.psasExecuted),
+    executeCoqlQuery(queries.convertedLeads),
+    executeCoqlQuery(queries.totalLeads),
+  ]);
+
+  return {
+    attendedBookings: attendedBookingsRes[0]?.count ?? 0,
+    offersPresented: offersPresentedRes[0]?.count ?? 0,
+    offersAccepted: offersAcceptedRes[0]?.count ?? 0,
+    psasExecuted: psasExecutedRes[0]?.count ?? 0,
+    convertedLeads: convertedLeadsRes[0]?.count ?? 0,
+    totalLeads: totalLeadsRes[0]?.count ?? 0,
+  };
+}
+
+export async function fetchAllManagersActualsFromZoho(
+  ownerEmails: string[],
+  dateRange: DateRange
+): Promise<Map<string, ManagerActuals>> {
+  const results = await Promise.all(
+    ownerEmails.map(async (email) => ({
+      email: email.toLowerCase(),
+      actuals: await fetchManagerActualsFromZoho(email, dateRange),
+    }))
+  );
+
+  return new Map(results.map((r) => [r.email, r.actuals]));
+}

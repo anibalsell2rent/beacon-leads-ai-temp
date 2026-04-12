@@ -221,49 +221,12 @@ export async function fetchManagerActualsFromZoho(
   const endDate = formatDateForCoql(dateRange.end);
 
   const queries = {
-    attendedBookings: `
-      SELECT COUNT(id) as count
-      FROM Leads
-      WHERE Seller_Coordinator_Bookings.email = '${ownerEmail}'
-        AND Scheduled_Meeting_For >= '${startDate}'
-        AND Scheduled_Meeting_For <= '${endDate}'
-        AND Booking_Status = 'Attended'
-    `,
-    offersPresented: `
-      SELECT COUNT(id) as count
-      FROM Leads
-      WHERE Seller_Manager.email = '${ownerEmail}'
-        AND S2R_Offer_Presented_Date >= '${startDate}'
-        AND S2R_Offer_Presented_Date <= '${endDate}'
-    `,
-    offersAccepted: `
-      SELECT COUNT(id) as count
-      FROM Leads
-      WHERE Seller_Manager.email = '${ownerEmail}'
-        AND S2R_Offer_Accepted_Date >= '${startDate}'
-        AND S2R_Offer_Accepted_Date <= '${endDate}'
-    `,
-    psasExecuted: `
-      SELECT COUNT(id) as count
-      FROM Leads
-      WHERE Seller_Manager.email = '${ownerEmail}'
-        AND PSA_Execution_Date >= '${startDate}'
-        AND PSA_Execution_Date <= '${endDate}'
-    `,
-    convertedLeads: `
-      SELECT COUNT(id) as count
-      FROM Deals
-      WHERE Seller_Manager.email = '${ownerEmail}'
-        AND Created_Time >= '${startDate}'
-        AND Created_Time <= '${endDate}'
-    `,
-    totalLeads: `
-      SELECT COUNT(id) as count
-      FROM Leads
-      WHERE Seller_Manager.email = '${ownerEmail}'
-        AND Created_Time >= '${startDate}'
-        AND Created_Time <= '${endDate}'
-    `,
+    attendedBookings: `select count(id) as count from Leads where Seller_Coordinator_Bookings.email = '${ownerEmail}' and Scheduled_Meeting_For >= '${startDate}' and Scheduled_Meeting_For <= '${endDate}' and Booking_Status = 'Attended'`,
+    offersPresented: `select count(id) as count from Leads where Seller_Manager.email = '${ownerEmail}' and S2R_Offer_Presented_Date >= '${startDate}' and S2R_Offer_Presented_Date <= '${endDate}'`,
+    offersAccepted: `select count(id) as count from Leads where Seller_Manager.email = '${ownerEmail}' and S2R_Offer_Accepted_Date >= '${startDate}' and S2R_Offer_Accepted_Date <= '${endDate}'`,
+    psasExecuted: `select count(id) as count from Leads where Seller_Manager.email = '${ownerEmail}' and PSA_Execution_Date >= '${startDate}' and PSA_Execution_Date <= '${endDate}'`,
+    convertedLeads: `select count(id) as count from Deals where Seller_Manager.email = '${ownerEmail}' and Created_Time >= '${startDate}' and Created_Time <= '${endDate}'`,
+    totalLeads: `select count(id) as count from Leads where Seller_Manager.email = '${ownerEmail}' and Created_Time >= '${startDate}' and Created_Time <= '${endDate}'`,
   };
 
   const [

@@ -24,13 +24,14 @@ export interface SellerManagerGoals {
   goalName: string | null;
   startingDate: string | null;
   endDate: string | null;
-  attendedBookings: GoalMetric;
+  firstCallSmsAttempts: GoalMetric;
+  newSellersContacted: GoalMetric;
+  followUpsAttempted: GoalMetric;
+  followUpsConnected: GoalMetric;
   offersPresented: GoalMetric;
   offersAccepted: GoalMetric;
   psasExecuted: GoalMetric;
   leadsConverted: GoalMetric;
-  avgNetRevenue: GoalMetric;
-  totalLeads: GoalMetric;
 }
 
 export interface TeamPerformanceGoals {
@@ -40,7 +41,12 @@ export interface TeamPerformanceGoals {
   psasExecuted: GoalMetric;
   leadsConverted: GoalMetric;
   avgNetRevenue: GoalMetric;
+  totalLeads: GoalMetric;
 }
+
+// ─── Constants ─────────────────────────────────────────────────────────────────
+
+const TOTAL_LEADS_TARGET = 1700;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -59,13 +65,14 @@ function buildManagerGoal(
     goalName: goal?.Name ?? null,
     startingDate: goal?.Starting_Date ?? null,
     endDate: goal?.End_Date ?? null,
-    attendedBookings: createMetric(0, 0), // Not implemented
+    firstCallSmsAttempts: createMetric(0, 0),
+    newSellersContacted: createMetric(0, 0),
+    followUpsAttempted: createMetric(0, 0),
+    followUpsConnected: createMetric(0, 0),
     offersPresented: createMetric(actuals.offersPresented, goal?.Offers_Presented_Target ?? null, totalLeads),
     offersAccepted: createMetric(actuals.offersAccepted, goal?.Offers_Accepted_Target ?? null, totalLeads),
     psasExecuted: createMetric(actuals.psasExecuted, goal?.PSA_s_Executed_Target ?? null, totalLeads),
     leadsConverted: createMetric(actuals.convertedLeads, goal?.Converted_Leads_Target ?? null, totalLeads),
-    avgNetRevenue: createMetric(0, goal?.Revenue_Target ?? null),
-    totalLeads: createMetric(totalLeads, goal?.Total_Leads_Target ?? null),
   };
 }
 
@@ -135,6 +142,7 @@ export class PerformanceGoalsService {
       psasExecuted: createMetric(totals.psasExecuted, totals.targets.psasExecuted, totalLeads),
       leadsConverted: createMetric(totals.leadsConverted, totals.targets.leadsConverted, totalLeads),
       avgNetRevenue: createMetric(0, totals.targets.revenue),
+      totalLeads: createMetric(totalLeads, TOTAL_LEADS_TARGET),
     };
 
     return { teamGoals, managerGoals };

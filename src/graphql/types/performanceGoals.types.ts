@@ -18,13 +18,14 @@ export const performanceGoalsTypeDefs = gql`
     goalName: String
     startingDate: String
     endDate: String
-    attendedBookings: PerformanceGoalMetric!
+    firstCallSmsAttempts: PerformanceGoalMetric!
+    newSellersContacted: PerformanceGoalMetric!
+    followUpsAttempted: PerformanceGoalMetric!
+    followUpsConnected: PerformanceGoalMetric!
     offersPresented: PerformanceGoalMetric!
     offersAccepted: PerformanceGoalMetric!
     psasExecuted: PerformanceGoalMetric!
     leadsConverted: PerformanceGoalMetric!
-    avgNetRevenue: PerformanceGoalMetric!
-    totalLeads: PerformanceGoalMetric!
   }
 
   type TeamPerformanceGoals {
@@ -34,6 +35,7 @@ export const performanceGoalsTypeDefs = gql`
     psasExecuted: PerformanceGoalMetric!
     leadsConverted: PerformanceGoalMetric!
     avgNetRevenue: PerformanceGoalMetric!
+    totalLeads: PerformanceGoalMetric!
   }
 
   type PerformanceGoalsResponse {

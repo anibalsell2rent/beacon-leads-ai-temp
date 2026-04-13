@@ -155,4 +155,10 @@ export class PerformanceGoalsService {
     const result = await this.getPerformanceGoals(timeframe);
     return result.managerGoals.find((m) => m.email.toLowerCase() === email.toLowerCase()) ?? null;
   }
+
+  static async getLeadsCount(timeframe: Timeframe): Promise<number> {
+    const range = getDateRange(timeframe);
+    const { totalLeads } = await fetchAllManagersActualsFromZoho([], range);
+    return totalLeads;
+  }
 }

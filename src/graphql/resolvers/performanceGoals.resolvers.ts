@@ -33,5 +33,17 @@ export const performanceGoalsResolvers = {
         );
       }
     },
+
+    getLeadsCount: async (
+      _: any,
+      { timeframe }: { timeframe: Timeframe }
+    ) => {
+      try {
+        return await PerformanceGoalsService.getLeadsCount(timeframe);
+      } catch (error: any) {
+        console.error("[PerformanceGoals Resolver] Error getLeadsCount:", error);
+        throw new Error(`Failed to fetch leads count: ${error.message}`);
+      }
+    },
   },
 };

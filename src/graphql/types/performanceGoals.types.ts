@@ -46,5 +46,6 @@ export const performanceGoalsTypeDefs = gql`
   extend type Query {
     getPerformanceGoals(timeframe: Timeframe!): PerformanceGoalsResponse!
     getPerformanceGoalsByEmail(email: String!, timeframe: Timeframe!): SellerManagerGoals
+    getLeadsCount(timeframe: Timeframe!): Int!
   }
 `;

@@ -11,6 +11,12 @@ import {
   isWithinInterval,
 } from "date-fns";
 import { Timeframe } from "../services/teamPerformance.service";
+import { hasuraQuery } from "./hasura.client";
+
+// ─── Constants ─────────────────────────────────────────────────────────────────
+
+export const SELLER_MANAGER_ROLE_ID = "07ed4242-3905-4136-b225-4f9b3a6137af";
+export const SELLER_ADVISOR_ROLE_ID = "89370776-e910-410a-8656-628f8691501d";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -270,6 +276,31 @@ export async function fetchTotalLeadsFromZoho(dateRange: DateRange): Promise<num
 export interface AllManagersActualsResult {
   managerActuals: Map<string, ManagerActuals>;
   totalLeads: number;
+}
+
+// ─── Seller Managers Query ─────────────────────────────────────────────────────
+
+export interface SellerManager {
+  id: number;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  initials: string | null;
+}
+
+const SELLER_MANAGERS_QUERY = `
+  query GetSellerManagers($roleId: uuid!) {
+    users(where: { role_id: { _eq: $roleId }, is_active: { _eq: true } }) {
+      id email first_name last_name initials
+    }
+  }
+`;
+
+export async function fetchSellerManagers(): Promise<SellerManager[]> {
+  const data = await hasuraQuery<{ users: SellerManager[] }>(SELLER_MANAGERS_QUERY, {
+    roleId: SELLER_MANAGER_ROLE_ID,
+  });
+  return data.users ?? [];
 }
 
 export async function fetchAllManagersActualsFromZoho(

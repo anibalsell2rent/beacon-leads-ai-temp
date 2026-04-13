@@ -1,4 +1,3 @@
-import { hasuraQuery } from "../utils/hasura.client";
 import { Timeframe } from "./teamPerformance.service";
 import {
   GoalMetric,
@@ -10,7 +9,8 @@ import {
   createMetric,
   fetchAllManagersActualsFromZoho,
   ManagerActuals,
-  AllManagersActualsResult,
+  fetchSellerManagers,
+  SellerManager,
 } from "../utils/zoho-goals.utils";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -42,40 +42,7 @@ export interface TeamPerformanceGoals {
   avgNetRevenue: GoalMetric;
 }
 
-// ─── Constants ─────────────────────────────────────────────────────────────────
-
-const SELLER_MANAGER_ROLE_ID = "07ed4242-3905-4136-b225-4f9b3a6137af";
-
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-
-interface SellerManager {
-  id: number;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  initials: string | null;
-}
-
-async function getSellerManagers(): Promise<SellerManager[]> {
-  const data = await hasuraQuery<{
-    users: {
-      id: number;
-      email: string;
-      first_name: string | null;
-      last_name: string | null;
-      initials: string | null;
-      role_id: string | null;
-      role: string | null;
-    }[];
-  }>(`query GetSellerManagers { users { id email first_name last_name initials role_id role } }`);
-
-  return data.users.filter(
-    (u) =>
-      u.role_id === SELLER_MANAGER_ROLE_ID ||
-      u.role?.toUpperCase() === "MANAGER" ||
-      u.role?.toUpperCase() === "SELLER_MANAGER"
-  );
-}
 
 function buildManagerGoal(
   manager: SellerManager,
@@ -112,7 +79,7 @@ export class PerformanceGoalsService {
 
     const [zohoGoals, sellerManagers] = await Promise.all([
       fetchZohoPerformanceGoals(),
-      getSellerManagers(),
+      fetchSellerManagers(),
     ]);
 
     const filteredGoals = filterGoalsByDateRange(zohoGoals, range);

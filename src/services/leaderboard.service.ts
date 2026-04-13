@@ -7,16 +7,20 @@ import {
   buildGoalsByEmail,
   createMetric,
   fetchAllManagersActualsFromZoho,
+  SELLER_MANAGER_ROLE_ID,
+  SELLER_ADVISOR_ROLE_ID,
 } from "../utils/zoho-goals.utils";
-
-const SELLER_MANAGER_ROLE_ID = "07ed4242-3905-4136-b225-4f9b3a6137af";
-const SELLER_ADVISOR_ROLE_ID = "89370776-e910-410a-8656-628f8691501d";
 const ACTIVITY_TYPE_CALL = 1;
 const ACTIVITY_TYPE_SMS = 2;
 
 const LEADERBOARD_QUERY = `
-  query LeaderboardData($tsStart: timestamp!, $tsEnd: timestamp!, $tsStartTz: timestamptz!, $tsEndTz: timestamptz!) {
-    users { id email first_name last_name role role_id initials }
+  query LeaderboardData($tsStart: timestamp!, $tsEnd: timestamp!, $tsStartTz: timestamptz!, $tsEndTz: timestamptz!, $managerRoleId: uuid!, $advisorRoleId: uuid!) {
+    sellerManagers: users(where: { role_id: { _eq: $managerRoleId }, is_active: { _eq: true } }) {
+      id email first_name last_name initials
+    }
+    sellerAdvisors: users(where: { role_id: { _eq: $advisorRoleId }, is_active: { _eq: true } }) {
+      id email first_name last_name initials
+    }
     crm_activities(where: { created_at: { _gte: $tsStart, _lte: $tsEnd } }) {
       created_by activity_type_id
     }
@@ -29,29 +33,20 @@ const LEADERBOARD_QUERY = `
   }
 `;
 
+interface UserData {
+  id: number;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  initials: string | null;
+}
+
 interface LeaderboardData {
-  users: {
-    id: number;
-    email: string | null;
-    first_name: string | null;
-    last_name: string | null;
-    role: string | null;
-    role_id: string | null;
-    initials: string | null;
-  }[];
+  sellerManagers: UserData[];
+  sellerAdvisors: UserData[];
   crm_activities: { created_by: number | null; activity_type_id: number | null }[];
   bookingLeads: { seller_advisor_id: number | null }[];
   convertedLeads: { seller_advisor_id: number | null }[];
-}
-
-function isRoleMatch(
-  user: { role_id: string | null; role: string | null },
-  roleId: string,
-  ...names: string[]
-): boolean {
-  if (user.role_id === roleId) return true;
-  const r = user.role?.toUpperCase();
-  return names.some((n) => r === n);
 }
 
 export class LeaderboardService {
@@ -67,24 +62,19 @@ export class LeaderboardService {
         tsEnd: end,
         tsStartTz: start,
         tsEndTz: end,
+        managerRoleId: SELLER_MANAGER_ROLE_ID,
+        advisorRoleId: SELLER_ADVISOR_ROLE_ID,
       }),
     ]);
 
     const filteredGoals = filterGoalsByDateRange(zohoGoals, range);
     const goalsByEmail = buildGoalsByEmail(filteredGoals);
 
-    const advisors = data.users.filter((u) =>
-      isRoleMatch(u, SELLER_ADVISOR_ROLE_ID, "ADVISOR", "SELLER_ADVISOR")
-    );
-    const managers = data.users.filter((u) =>
-      isRoleMatch(u, SELLER_MANAGER_ROLE_ID, "MANAGER", "SELLER_MANAGER")
-    );
-
     // Fetch actuals from Zoho COQL for all managers
-    const managerEmails = managers.map((m) => m.email).filter(Boolean) as string[];
+    const managerEmails = data.sellerManagers.map((m) => m.email).filter(Boolean) as string[];
     const { managerActuals, totalLeads } = await fetchAllManagersActualsFromZoho(managerEmails, range);
 
-    const sellerAdvisors = advisors.map((emp) => {
+    const sellerAdvisors = data.sellerAdvisors.map((emp) => {
       const userId = Number(emp.id);
       const callsConnected = data.crm_activities.filter(
         (a) => a.activity_type_id === ACTIVITY_TYPE_CALL && Number(a.created_by) === userId
@@ -110,7 +100,7 @@ export class LeaderboardService {
       };
     });
 
-    const sellerManagers = managers.map((emp) => {
+    const sellerManagers = data.sellerManagers.map((emp) => {
       const email = emp.email?.toLowerCase() || "";
       const goal = goalsByEmail.get(email);
       const actuals = managerActuals.get(email) ?? {

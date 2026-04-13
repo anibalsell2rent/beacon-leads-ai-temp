@@ -157,20 +157,35 @@ export class PerformanceGoalsService {
     return result.managerGoals.find((m) => m.email.toLowerCase() === email.toLowerCase()) ?? null;
   }
 
-  static async getLeadsCount(timeframe: Timeframe): Promise<number> {
-    const range = getDateRange(timeframe);
-    const start = range.start.toISOString();
-    const end = range.end.toISOString();
+  static async getLeadsCount(timeframe?: Timeframe): Promise<number> {
+    if (timeframe) {
+      const range = getDateRange(timeframe);
+      const start = range.start.toISOString();
+      const end = range.end.toISOString();
 
+      const data = await hasuraQuery<{
+        crm_leads_aggregate: { aggregate: { count: number } };
+      }>(
+        `query GetLeadsCount($start: timestamptz!, $end: timestamptz!) {
+          crm_leads_aggregate(where: { date_created: { _gte: $start, _lte: $end } }) {
+            aggregate { count }
+          }
+        }`,
+        { start, end }
+      );
+
+      return data.crm_leads_aggregate?.aggregate?.count ?? 0;
+    }
+
+    // No timeframe: return total count
     const data = await hasuraQuery<{
       crm_leads_aggregate: { aggregate: { count: number } };
     }>(
-      `query GetLeadsCount($start: timestamptz!, $end: timestamptz!) {
-        crm_leads_aggregate(where: { date_created: { _gte: $start, _lte: $end } }) {
+      `query GetAllLeadsCount {
+        crm_leads_aggregate {
           aggregate { count }
         }
-      }`,
-      { start, end }
+      }`
     );
 
     return data.crm_leads_aggregate?.aggregate?.count ?? 0;

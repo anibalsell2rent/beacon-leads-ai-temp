@@ -36,7 +36,7 @@ export const performanceGoalsResolvers = {
 
     getLeadsCount: async (
       _: any,
-      { timeframe }: { timeframe: Timeframe }
+      { timeframe }: { timeframe?: Timeframe }
     ) => {
       try {
         return await PerformanceGoalsService.getLeadsCount(timeframe);

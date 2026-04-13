@@ -200,8 +200,17 @@ export async function executeCoqlQuery(query: string): Promise<Record<string, an
   }
 }
 
-function formatDateForCoql(date: Date): string {
+function formatDateOnly(date: Date): string {
   return date.toISOString().split("T")[0];
+}
+
+function formatDateTimeISO(date: Date): string {
+  return date.toISOString().replace(/\.\d{3}Z$/, "+00:00");
+}
+
+function getNextMonthStart(date: Date): string {
+  const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+  return formatDateOnly(nextMonth);
 }
 
 export interface ManagerActuals {
@@ -210,61 +219,75 @@ export interface ManagerActuals {
   offersAccepted: number;
   psasExecuted: number;
   convertedLeads: number;
-  totalLeads: number;
 }
 
 export async function fetchManagerActualsFromZoho(
   ownerEmail: string,
   dateRange: DateRange
 ): Promise<ManagerActuals> {
-  const startDate = formatDateForCoql(dateRange.start);
-  const endDate = formatDateForCoql(dateRange.end);
+  const startDate = formatDateOnly(dateRange.start);
+  const endDateExclusive = getNextMonthStart(dateRange.end);
+  const startDateTime = formatDateTimeISO(dateRange.start);
+  const endDateTime = formatDateTimeISO(new Date(dateRange.end.getFullYear(), dateRange.end.getMonth() + 1, 1));
 
   const queries = {
-    attendedBookings: `select count(id) as count from Leads where Seller_Coordinator_Bookings.email = '${ownerEmail}' and Scheduled_Meeting_For >= '${startDate}' and Scheduled_Meeting_For <= '${endDate}' and Booking_Status = 'Attended'`,
-    offersPresented: `select count(id) as count from Leads where Seller_Manager.email = '${ownerEmail}' and S2R_Offer_Presented_Date >= '${startDate}' and S2R_Offer_Presented_Date <= '${endDate}'`,
-    offersAccepted: `select count(id) as count from Leads where Seller_Manager.email = '${ownerEmail}' and S2R_Offer_Accepted_Date >= '${startDate}' and S2R_Offer_Accepted_Date <= '${endDate}'`,
-    psasExecuted: `select count(id) as count from Leads where Seller_Manager.email = '${ownerEmail}' and PSA_Execution_Date >= '${startDate}' and PSA_Execution_Date <= '${endDate}'`,
-    convertedLeads: `select count(id) as count from Deals where Seller_Manager.email = '${ownerEmail}' and Created_Time >= '${startDate}' and Created_Time <= '${endDate}'`,
-    totalLeads: `select count(id) as count from Leads where Seller_Manager.email = '${ownerEmail}' and Created_Time >= '${startDate}' and Created_Time <= '${endDate}'`,
+    offersPresented: `select COUNT(id) as total from Leads where ((Seller_Manager.email = '${ownerEmail}') and (Offer_Presented_Date >= '${startDate}' and Offer_Presented_Date < '${endDateExclusive}')) GROUP BY Seller_Manager`,
+    offersAccepted: `select COUNT(id) as total from Leads where ((Seller_Manager.email = '${ownerEmail}') and (Offer_Accepted_Date >= '${startDate}' and Offer_Accepted_Date < '${endDateExclusive}')) GROUP BY Seller_Manager`,
+    psasExecuted: `select COUNT(id) as total from Leads where ((Seller_Manager.email = '${ownerEmail}') and (PSA_Execution_Date >= '${startDate}' and PSA_Execution_Date < '${endDateExclusive}')) GROUP BY Seller_Manager`,
+    convertedLeads: `select COUNT(userlookup221_24.id) AS total, Seller_Manager from x11 where ((Seller_Manager.email = '${ownerEmail}') and (userlookup221_24.Created_Time >= '${startDateTime}' and userlookup221_24.Created_Time < '${endDateTime}')) GROUP BY Seller_Manager`,
   };
 
   const [
-    attendedBookingsRes,
     offersPresentedRes,
     offersAcceptedRes,
     psasExecutedRes,
     convertedLeadsRes,
-    totalLeadsRes,
   ] = await Promise.all([
-    executeCoqlQuery(queries.attendedBookings),
     executeCoqlQuery(queries.offersPresented),
     executeCoqlQuery(queries.offersAccepted),
     executeCoqlQuery(queries.psasExecuted),
     executeCoqlQuery(queries.convertedLeads),
-    executeCoqlQuery(queries.totalLeads),
   ]);
 
   return {
-    attendedBookings: attendedBookingsRes[0]?.count ?? 0,
-    offersPresented: offersPresentedRes[0]?.count ?? 0,
-    offersAccepted: offersAcceptedRes[0]?.count ?? 0,
-    psasExecuted: psasExecutedRes[0]?.count ?? 0,
-    convertedLeads: convertedLeadsRes[0]?.count ?? 0,
-    totalLeads: totalLeadsRes[0]?.count ?? 0,
+    attendedBookings: 0,
+    offersPresented: offersPresentedRes[0]?.total ?? 0,
+    offersAccepted: offersAcceptedRes[0]?.total ?? 0,
+    psasExecuted: psasExecutedRes[0]?.total ?? 0,
+    convertedLeads: convertedLeadsRes[0]?.total ?? 0,
   };
+}
+
+export async function fetchTotalLeadsFromZoho(dateRange: DateRange): Promise<number> {
+  const startDateTime = formatDateTimeISO(dateRange.start);
+  const endDateTime = formatDateTimeISO(new Date(dateRange.end.getFullYear(), dateRange.end.getMonth() + 1, 1));
+  
+  const query = `select COUNT(id) as total from Leads where (Created_Time >= '${startDateTime}' and Created_Time < '${endDateTime}')`;
+  const result = await executeCoqlQuery(query);
+  return result[0]?.total ?? 0;
+}
+
+export interface AllManagersActualsResult {
+  managerActuals: Map<string, ManagerActuals>;
+  totalLeads: number;
 }
 
 export async function fetchAllManagersActualsFromZoho(
   ownerEmails: string[],
   dateRange: DateRange
-): Promise<Map<string, ManagerActuals>> {
-  const results = await Promise.all(
-    ownerEmails.map(async (email) => ({
-      email: email.toLowerCase(),
-      actuals: await fetchManagerActualsFromZoho(email, dateRange),
-    }))
-  );
+): Promise<AllManagersActualsResult> {
+  const [managerResults, totalLeads] = await Promise.all([
+    Promise.all(
+      ownerEmails.map(async (email) => ({
+        email: email.toLowerCase(),
+        actuals: await fetchManagerActualsFromZoho(email, dateRange),
+      }))
+    ),
+    fetchTotalLeadsFromZoho(dateRange),
+  ]);
 
-  return new Map(results.map((r) => [r.email, r.actuals]));
+  return {
+    managerActuals: new Map(managerResults.map((r) => [r.email, r.actuals])),
+    totalLeads,
+  };
 }

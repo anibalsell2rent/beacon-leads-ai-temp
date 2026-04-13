@@ -82,7 +82,7 @@ export class LeaderboardService {
 
     // Fetch actuals from Zoho COQL for all managers
     const managerEmails = managers.map((m) => m.email).filter(Boolean) as string[];
-    const actualsMap = await fetchAllManagersActualsFromZoho(managerEmails, range);
+    const { managerActuals, totalLeads } = await fetchAllManagersActualsFromZoho(managerEmails, range);
 
     const sellerAdvisors = advisors.map((emp) => {
       const userId = Number(emp.id);
@@ -113,13 +113,12 @@ export class LeaderboardService {
     const sellerManagers = managers.map((emp) => {
       const email = emp.email?.toLowerCase() || "";
       const goal = goalsByEmail.get(email);
-      const actuals = actualsMap.get(email) ?? {
+      const actuals = managerActuals.get(email) ?? {
         attendedBookings: 0,
         offersPresented: 0,
         offersAccepted: 0,
         psasExecuted: 0,
         convertedLeads: 0,
-        totalLeads: 0,
       };
 
       const userId = Number(emp.id);
@@ -141,11 +140,11 @@ export class LeaderboardService {
         newSellersContacted: createMetric(0, goal?.New_Sellers_Contacted_Target ?? 20),
         followUpsAttempted: createMetric(0, goal?.Follow_Ups_Attempted_Target ?? 50),
         followUpsConnected: createMetric(0, goal?.Follow_Ups_Connected_Target ?? 25),
-        offersPresented: createMetric(actuals.offersPresented, goal?.Offers_Presented_Target ?? 60),
-        offersAccepted: createMetric(actuals.offersAccepted, goal?.Offers_Accepted_Target ?? 30),
-        psasExecuted: createMetric(actuals.psasExecuted, goal?.PSA_s_Executed_Target ?? 20),
-        leadsConverted: createMetric(actuals.convertedLeads, goal?.Converted_Leads_Target ?? 15),
-        totalLeads: actuals.totalLeads,
+        offersPresented: createMetric(actuals.offersPresented, goal?.Offers_Presented_Target ?? 60, totalLeads),
+        offersAccepted: createMetric(actuals.offersAccepted, goal?.Offers_Accepted_Target ?? 30, totalLeads),
+        psasExecuted: createMetric(actuals.psasExecuted, goal?.PSA_s_Executed_Target ?? 20, totalLeads),
+        leadsConverted: createMetric(actuals.convertedLeads, goal?.Converted_Leads_Target ?? 15, totalLeads),
+        totalLeads,
         monthlyOffersGoal: goal?.Offers_Presented_Target ?? 60,
         conversionPercentage: parseFloat(
           ((actuals.convertedLeads / (actuals.offersPresented || 1)) * 100).toFixed(2)

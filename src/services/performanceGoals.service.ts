@@ -10,6 +10,7 @@ import {
   createMetric,
   fetchAllManagersActualsFromZoho,
   ManagerActuals,
+  AllManagersActualsResult,
 } from "../utils/zoho-goals.utils";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -79,7 +80,8 @@ async function getSellerManagers(): Promise<SellerManager[]> {
 function buildManagerGoal(
   manager: SellerManager,
   goal: ZohoPerformanceGoal | undefined,
-  actuals: ManagerActuals
+  actuals: ManagerActuals,
+  totalLeads: number
 ): SellerManagerGoals {
   return {
     userId: manager.id,
@@ -90,13 +92,13 @@ function buildManagerGoal(
     goalName: goal?.Name ?? null,
     startingDate: goal?.Starting_Date ?? null,
     endDate: goal?.End_Date ?? null,
-    attendedBookings: createMetric(actuals.attendedBookings, goal?.Bookings_Attended_Target ?? null, actuals.totalLeads),
-    offersPresented: createMetric(actuals.offersPresented, goal?.Offers_Presented_Target ?? null, actuals.totalLeads),
-    offersAccepted: createMetric(actuals.offersAccepted, goal?.Offers_Accepted_Target ?? null, actuals.totalLeads),
-    psasExecuted: createMetric(actuals.psasExecuted, goal?.PSA_s_Executed_Target ?? null, actuals.totalLeads),
-    leadsConverted: createMetric(actuals.convertedLeads, goal?.Converted_Leads_Target ?? null, actuals.totalLeads),
-    avgNetRevenue: createMetric(0, goal?.Revenue_Target ?? null), // Revenue comes from deals, will fetch separately if needed
-    totalLeads: createMetric(actuals.totalLeads, goal?.Total_Leads_Target ?? null),
+    attendedBookings: createMetric(0, 0), // Not implemented
+    offersPresented: createMetric(actuals.offersPresented, goal?.Offers_Presented_Target ?? null, totalLeads),
+    offersAccepted: createMetric(actuals.offersAccepted, goal?.Offers_Accepted_Target ?? null, totalLeads),
+    psasExecuted: createMetric(actuals.psasExecuted, goal?.PSA_s_Executed_Target ?? null, totalLeads),
+    leadsConverted: createMetric(actuals.convertedLeads, goal?.Converted_Leads_Target ?? null, totalLeads),
+    avgNetRevenue: createMetric(0, goal?.Revenue_Target ?? null),
+    totalLeads: createMetric(totalLeads, goal?.Total_Leads_Target ?? null),
   };
 }
 
@@ -118,18 +120,15 @@ export class PerformanceGoalsService {
 
     // Fetch actuals from Zoho COQL for all managers
     const managerEmails = sellerManagers.map((m) => m.email).filter(Boolean);
-    const actualsMap = await fetchAllManagersActualsFromZoho(managerEmails, range);
+    const { managerActuals, totalLeads } = await fetchAllManagersActualsFromZoho(managerEmails, range);
 
     const managerGoals: SellerManagerGoals[] = [];
     const totals = {
-      bookings: 0,
       offersPresented: 0,
       offersAccepted: 0,
       psasExecuted: 0,
       leadsConverted: 0,
-      totalLeads: 0,
       targets: {
-        bookings: 0,
         offersPresented: 0,
         offersAccepted: 0,
         psasExecuted: 0,
@@ -141,24 +140,20 @@ export class PerformanceGoalsService {
     for (const manager of sellerManagers) {
       const email = manager.email?.toLowerCase();
       const goal = email ? goalsByEmail.get(email) : undefined;
-      const actuals = actualsMap.get(email) ?? {
+      const actuals = managerActuals.get(email) ?? {
         attendedBookings: 0,
         offersPresented: 0,
         offersAccepted: 0,
         psasExecuted: 0,
         convertedLeads: 0,
-        totalLeads: 0,
       };
 
-      managerGoals.push(buildManagerGoal(manager, goal, actuals));
+      managerGoals.push(buildManagerGoal(manager, goal, actuals, totalLeads));
 
-      totals.bookings += actuals.attendedBookings;
       totals.offersPresented += actuals.offersPresented;
       totals.offersAccepted += actuals.offersAccepted;
       totals.psasExecuted += actuals.psasExecuted;
       totals.leadsConverted += actuals.convertedLeads;
-      totals.totalLeads += actuals.totalLeads;
-      totals.targets.bookings += goal?.Bookings_Attended_Target ?? 0;
       totals.targets.offersPresented += goal?.Offers_Presented_Target ?? 0;
       totals.targets.offersAccepted += goal?.Offers_Accepted_Target ?? 0;
       totals.targets.psasExecuted += goal?.PSA_s_Executed_Target ?? 0;
@@ -167,11 +162,11 @@ export class PerformanceGoalsService {
     }
 
     const teamGoals: TeamPerformanceGoals = {
-      attendedBookings: createMetric(totals.bookings, totals.targets.bookings, totals.totalLeads),
-      offersPresented: createMetric(totals.offersPresented, totals.targets.offersPresented, totals.totalLeads),
-      offersAccepted: createMetric(totals.offersAccepted, totals.targets.offersAccepted, totals.totalLeads),
-      psasExecuted: createMetric(totals.psasExecuted, totals.targets.psasExecuted, totals.totalLeads),
-      leadsConverted: createMetric(totals.leadsConverted, totals.targets.leadsConverted, totals.totalLeads),
+      attendedBookings: createMetric(0, 0),
+      offersPresented: createMetric(totals.offersPresented, totals.targets.offersPresented, totalLeads),
+      offersAccepted: createMetric(totals.offersAccepted, totals.targets.offersAccepted, totalLeads),
+      psasExecuted: createMetric(totals.psasExecuted, totals.targets.psasExecuted, totalLeads),
+      leadsConverted: createMetric(totals.leadsConverted, totals.targets.leadsConverted, totalLeads),
       avgNetRevenue: createMetric(0, totals.targets.revenue),
     };
 

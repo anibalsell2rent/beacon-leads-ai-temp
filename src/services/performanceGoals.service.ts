@@ -1,4 +1,5 @@
 import { Timeframe } from "./teamPerformance.service";
+import { hasuraQuery } from "../utils/hasura.client";
 import {
   GoalMetric,
   ZohoPerformanceGoal,
@@ -158,7 +159,20 @@ export class PerformanceGoalsService {
 
   static async getLeadsCount(timeframe: Timeframe): Promise<number> {
     const range = getDateRange(timeframe);
-    const { totalLeads } = await fetchAllManagersActualsFromZoho([], range);
-    return totalLeads;
+    const start = range.start.toISOString();
+    const end = range.end.toISOString();
+
+    const data = await hasuraQuery<{
+      crm_leads_aggregate: { aggregate: { count: number } };
+    }>(
+      `query GetLeadsCount($start: timestamptz!, $end: timestamptz!) {
+        crm_leads_aggregate(where: { date_created: { _gte: $start, _lte: $end } }) {
+          aggregate { count }
+        }
+      }`,
+      { start, end }
+    );
+
+    return data.crm_leads_aggregate?.aggregate?.count ?? 0;
   }
 }

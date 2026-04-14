@@ -57,6 +57,7 @@ export const leadManagementTypeDefs = gql`
     liveOffers: [Lead!]!
     pipelineFollowUps: [Lead!]!
     newLeads: [Lead!]!
+    trackingDate: String!
   }
 
   type ManagerGoals {
@@ -86,7 +87,7 @@ export const leadManagementTypeDefs = gql`
       timeframe: Timeframe!
     ): ManagerGoals
 
-    getManagerLeads(managerId: Int!): ManagerLeadsResponse!
+    getManagerLeads(managerId: Int!, trackingDate: String): ManagerLeadsResponse!
 
     searchLeads(
       query: String!
@@ -99,12 +100,14 @@ export const leadManagementTypeDefs = gql`
       managerId: Int!
       leadId: String!
       tab: LeadTab!
+      trackingDate: String
     ): Lead!
 
     removeLeadFromTab(
       managerId: Int!
       leadId: String!
       tab: LeadTab!
+      trackingDate: String
     ): Boolean!
 
     updateLeadRating(

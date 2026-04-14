@@ -27,9 +27,12 @@ export const leadManagementResolvers = {
       }
     },
 
-    getManagerLeads: async (_: any, { managerId }: { managerId: number }) => {
+    getManagerLeads: async (
+      _: any,
+      { managerId, trackingDate }: { managerId: number; trackingDate?: string }
+    ) => {
       try {
-        return await LeadManagementService.getManagerLeads(managerId);
+        return await LeadManagementService.getManagerLeads(managerId, trackingDate);
       } catch (error: any) {
         console.error("[LeadManagement] Error getManagerLeads:", error);
         throw new Error(`Failed to fetch manager leads: ${error.message}`);
@@ -52,10 +55,10 @@ export const leadManagementResolvers = {
   Mutation: {
     addLeadToTab: async (
       _: any,
-      { managerId, leadId, tab }: { managerId: number; leadId: string; tab: LeadTab }
+      { managerId, leadId, tab, trackingDate }: { managerId: number; leadId: string; tab: LeadTab; trackingDate?: string }
     ) => {
       try {
-        return await LeadManagementService.addLeadToTab(managerId, leadId, tab);
+        return await LeadManagementService.addLeadToTab(managerId, leadId, tab, trackingDate);
       } catch (error: any) {
         console.error("[LeadManagement] Error addLeadToTab:", error);
         throw new Error(`Failed to add lead to tab: ${error.message}`);
@@ -64,10 +67,10 @@ export const leadManagementResolvers = {
 
     removeLeadFromTab: async (
       _: any,
-      { managerId, leadId, tab }: { managerId: number; leadId: string; tab: LeadTab }
+      { managerId, leadId, tab, trackingDate }: { managerId: number; leadId: string; tab: LeadTab; trackingDate?: string }
     ) => {
       try {
-        return await LeadManagementService.removeLeadFromTab(managerId, leadId, tab);
+        return await LeadManagementService.removeLeadFromTab(managerId, leadId, tab, trackingDate);
       } catch (error: any) {
         console.error("[LeadManagement] Error removeLeadFromTab:", error);
         throw new Error(`Failed to remove lead from tab: ${error.message}`);

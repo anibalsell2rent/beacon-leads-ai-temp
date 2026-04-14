@@ -56,6 +56,7 @@ interface ManagerLeadsResponse {
   liveOffers: Lead[];
   pipelineFollowUps: Lead[];
   newLeads: Lead[];
+  trackingDate: string;
 }
 
 interface GoalMetric {
@@ -95,12 +96,12 @@ const USER_BY_SLUG_QUERY = `
 `;
 
 const MANAGER_LEADS_QUERY = `
-  query GetManagerLeads($managerId: Int!) {
+  query GetManagerLeads($managerId: Int!, $trackingDate: date!) {
     hotLeads: manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" } }
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" }, tracking_date: { _eq: $trackingDate } }
       order_by: { added_at: desc }
     ) {
-      lead_id tab added_at
+      lead_id tab added_at tracking_date
       crm_lead {
         id full_name email phone address city state zip_code
         lead_team_rating stage_id lead_status date_created updated_at
@@ -109,10 +110,10 @@ const MANAGER_LEADS_QUERY = `
       }
     }
     liveOffers: manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" } }
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" }, tracking_date: { _eq: $trackingDate } }
       order_by: { added_at: desc }
     ) {
-      lead_id tab added_at
+      lead_id tab added_at tracking_date
       crm_lead {
         id full_name email phone address city state zip_code
         lead_team_rating stage_id lead_status date_created updated_at
@@ -121,10 +122,10 @@ const MANAGER_LEADS_QUERY = `
       }
     }
     pipelineFollowUps: manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId }, tab: { _eq: "PIPELINE_FOLLOW_UP" } }
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "PIPELINE_FOLLOW_UP" }, tracking_date: { _eq: $trackingDate } }
       order_by: { added_at: desc }
     ) {
-      lead_id tab added_at
+      lead_id tab added_at tracking_date
       crm_lead {
         id full_name email phone address city state zip_code
         lead_team_rating stage_id lead_status date_created updated_at
@@ -133,10 +134,10 @@ const MANAGER_LEADS_QUERY = `
       }
     }
     newLeads: manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId }, tab: { _eq: "NEW_LEAD" } }
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "NEW_LEAD" }, tracking_date: { _eq: $trackingDate } }
       order_by: { added_at: desc }
     ) {
-      lead_id tab added_at
+      lead_id tab added_at tracking_date
       crm_lead {
         id full_name email phone address city state zip_code
         lead_team_rating stage_id lead_status date_created updated_at
@@ -160,9 +161,9 @@ const LEAD_NOTES_QUERY = `
 `;
 
 const LEAD_TABS_QUERY = `
-  query GetLeadTabs($leadIds: [uuid!]!, $managerId: Int!) {
+  query GetLeadTabs($leadIds: [uuid!]!, $managerId: Int!, $trackingDate: date!) {
     manager_lead_tracking(
-      where: { lead_id: { _in: $leadIds }, manager_id: { _eq: $managerId } }
+      where: { lead_id: { _in: $leadIds }, manager_id: { _eq: $managerId }, tracking_date: { _eq: $trackingDate } }
     ) {
       lead_id tab
     }
@@ -220,10 +221,10 @@ const MANAGER_INFO_QUERY = `
 `;
 
 const ADD_LEAD_TO_TAB_MUTATION = `
-  mutation AddLeadToTab($managerId: Int!, $leadId: uuid!, $tab: String!) {
+  mutation AddLeadToTab($managerId: Int!, $leadId: uuid!, $tab: String!, $trackingDate: date!) {
     insert_manager_lead_tracking_one(
-      object: { manager_id: $managerId, lead_id: $leadId, tab: $tab }
-      on_conflict: { constraint: manager_lead_tracking_manager_id_lead_id_tab_key, update_columns: [] }
+      object: { manager_id: $managerId, lead_id: $leadId, tab: $tab, tracking_date: $trackingDate }
+      on_conflict: { constraint: manager_lead_tracking_unique_per_day, update_columns: [] }
     ) {
       id
     }
@@ -231,12 +232,13 @@ const ADD_LEAD_TO_TAB_MUTATION = `
 `;
 
 const REMOVE_LEAD_FROM_TAB_MUTATION = `
-  mutation RemoveLeadFromTab($managerId: Int!, $leadId: uuid!, $tab: String!) {
+  mutation RemoveLeadFromTab($managerId: Int!, $leadId: uuid!, $tab: String!, $trackingDate: date!) {
     delete_manager_lead_tracking(
       where: {
         manager_id: { _eq: $managerId }
         lead_id: { _eq: $leadId }
         tab: { _eq: $tab }
+        tracking_date: { _eq: $trackingDate }
       }
     ) {
       affected_rows
@@ -386,8 +388,9 @@ export class LeadManagementService {
     };
   }
 
-  static async getManagerLeads(managerId: number): Promise<ManagerLeadsResponse> {
-    const data = await hasuraQuery<any>(MANAGER_LEADS_QUERY, { managerId });
+  static async getManagerLeads(managerId: number, trackingDate?: string): Promise<ManagerLeadsResponse> {
+    const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
+    const data = await hasuraQuery<any>(MANAGER_LEADS_QUERY, { managerId, trackingDate: dateToUse });
 
     const allLeadIds = [
       ...data.hotLeads,
@@ -403,7 +406,7 @@ export class LeadManagementService {
       allLeadIds.length > 0
         ? hasuraQuery<any>(LEAD_NOTES_QUERY, { leadIds: allLeadIds })
         : { crm_activities: [] },
-      hasuraQuery<any>(LEAD_TABS_QUERY, { leadIds: allLeadIds, managerId }),
+      hasuraQuery<any>(LEAD_TABS_QUERY, { leadIds: allLeadIds, managerId, trackingDate: dateToUse }),
     ]);
 
     // Group notes by lead_id
@@ -433,6 +436,7 @@ export class LeadManagementService {
       liveOffers: mapLeads(data.liveOffers ?? []),
       pipelineFollowUps: mapLeads(data.pipelineFollowUps ?? []),
       newLeads: mapLeads(data.newLeads ?? []),
+      trackingDate: dateToUse,
     };
   }
 
@@ -449,21 +453,26 @@ export class LeadManagementService {
   static async addLeadToTab(
     managerId: number,
     leadId: string,
-    tab: LeadTab
+    tab: LeadTab,
+    trackingDate?: string
   ): Promise<Lead> {
-    await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab });
-    return this.getLeadById(leadId, managerId);
+    const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
+    await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab, trackingDate: dateToUse });
+    return this.getLeadById(leadId, managerId, dateToUse);
   }
 
   static async removeLeadFromTab(
     managerId: number,
     leadId: string,
-    tab: LeadTab
+    tab: LeadTab,
+    trackingDate?: string
   ): Promise<boolean> {
+    const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
     const data = await hasuraQuery<any>(REMOVE_LEAD_FROM_TAB_MUTATION, {
       managerId,
       leadId,
       tab,
+      trackingDate: dateToUse,
     });
     return (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
   }
@@ -496,7 +505,7 @@ export class LeadManagementService {
     return parseNote(data.insert_crm_activities_one);
   }
 
-  private static async getLeadById(leadId: string, managerId?: number): Promise<Lead> {
+  private static async getLeadById(leadId: string, managerId?: number, trackingDate?: string): Promise<Lead> {
     const data = await hasuraQuery<any>(LEAD_BY_ID_QUERY, { leadId });
 
     const lead = data.crm_leads_by_pk;

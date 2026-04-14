@@ -108,7 +108,7 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id lead_team_rating stage_id lead_status date_created updated_at
+        id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
@@ -121,7 +121,7 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id lead_team_rating stage_id lead_status date_created updated_at
+        id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
@@ -134,7 +134,7 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id lead_team_rating stage_id lead_status date_created updated_at
+        id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
@@ -147,7 +147,7 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id lead_team_rating stage_id lead_status date_created updated_at
+        id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
@@ -195,7 +195,7 @@ const SEARCH_LEADS_QUERY = `
       limit: $limit
       order_by: { date_created: desc }
     ) {
-      id lead_team_rating stage_id lead_status date_created updated_at
+      id lead_team_rating stage_id date_created updated_at
       seller_manager_id
       crm_seller {
         first_name last_name email phone address city state zip_code
@@ -207,7 +207,7 @@ const SEARCH_LEADS_QUERY = `
 const LEAD_BY_ID_QUERY = `
   query GetLeadById($leadId: uuid!) {
     crm_leads_by_pk(id: $leadId) {
-      id lead_team_rating stage_id lead_status date_created updated_at
+      id lead_team_rating stage_id date_created updated_at
       lead_final_score s2r_net_revenue seller_segment marketing_source
       seller_manager_id
       crm_seller {
@@ -314,7 +314,7 @@ function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead 
     zipCode: seller?.zip_code ?? null,
     leadTeamRating: lead.lead_team_rating?.toUpperCase() as LeadTeamRating | null,
     stageId: lead.stage_id,
-    stageName: lead.lead_status,
+    stageName: null,
     assignedTo: lead.seller_manager_id,
     assignedToName,
     leadScore: lead.lead_final_score,

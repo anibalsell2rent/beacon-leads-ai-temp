@@ -108,11 +108,11 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id full_name email phone address city state zip_code
-        lead_team_rating stage_id lead_status date_created updated_at
+        id lead_team_rating stage_id lead_status date_created updated_at
         lead_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
+        crm_seller { first_name last_name email phone address city state zip_code }
       }
     }
     liveOffers: manager_lead_tracking(
@@ -121,11 +121,11 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id full_name email phone address city state zip_code
-        lead_team_rating stage_id lead_status date_created updated_at
+        id lead_team_rating stage_id lead_status date_created updated_at
         lead_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
+        crm_seller { first_name last_name email phone address city state zip_code }
       }
     }
     pipelineFollowUps: manager_lead_tracking(
@@ -134,11 +134,11 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id full_name email phone address city state zip_code
-        lead_team_rating stage_id lead_status date_created updated_at
+        id lead_team_rating stage_id lead_status date_created updated_at
         lead_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
+        crm_seller { first_name last_name email phone address city state zip_code }
       }
     }
     newLeads: manager_lead_tracking(
@@ -147,11 +147,11 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id full_name email phone address city state zip_code
-        lead_team_rating stage_id lead_status date_created updated_at
+        id lead_team_rating stage_id lead_status date_created updated_at
         lead_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
+        crm_seller { first_name last_name email phone address city state zip_code }
       }
     }
   }
@@ -293,20 +293,25 @@ const ADD_LEAD_NOTE_MUTATION = `
 
 function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead {
   const lead = data.crm_lead || data;
+  const seller = lead.crm_seller;
   const manager = lead.seller_manager;
+
+  const fullName = seller
+    ? `${seller.first_name ?? ""} ${seller.last_name ?? ""}`.trim()
+    : "";
   const assignedToName = manager
     ? `${manager.first_name ?? ""} ${manager.last_name ?? ""}`.trim()
     : null;
 
   return {
     id: lead.id,
-    name: lead.full_name ?? "",
-    email: lead.email ?? null,
-    phone: lead.phone ?? null,
-    address: lead.address ?? null,
-    city: lead.city ?? null,
-    state: lead.state ?? null,
-    zipCode: lead.zip_code ?? null,
+    name: fullName,
+    email: seller?.email ?? null,
+    phone: seller?.phone ?? null,
+    address: seller?.address ?? null,
+    city: seller?.city ?? null,
+    state: seller?.state ?? null,
+    zipCode: seller?.zip_code ?? null,
     leadTeamRating: lead.lead_team_rating?.toUpperCase() as LeadTeamRating | null,
     stageId: lead.stage_id,
     stageName: lead.lead_status,

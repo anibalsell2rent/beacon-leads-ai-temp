@@ -11,257 +11,200 @@ import {
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-type ManagerLeadTab = "HOT_LEAD" | "LIVE_OFFER" | "PIPELINE_FOLLOW_UP" | "NEW_LEAD";
+type LeadTab = "HOT_LEAD" | "LIVE_OFFER" | "PIPELINE_FOLLOW_UP" | "NEW_LEAD";
 type LeadTeamRating = "AMAZING" | "GOOD" | "NEUTRAL" | "BAD";
 
-interface LeadNote {
-  content: string;
-  timestamp: string;
+interface User {
+  id: number;
+  slug: string;
+  name: string;
+  email: string;
+  initials: string;
+  role: string;
+  avatar: string | null;
 }
 
-interface LeadUser {
+interface LeadNote {
   id: number;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  slug: string | null;
-  initials: string | null;
+  content: string;
+  timestamp: string;
+  createdBy: number;
+  createdByName: string;
 }
 
 interface Lead {
   id: string;
-  fullName: string | null;
+  name: string;
   email: string | null;
   phone: string | null;
   address: string | null;
   city: string | null;
   state: string | null;
   zipCode: string | null;
-  propertyType: string | null;
-  leadSource: string | null;
-  leadStatus: string | null;
-  result: string | null;
-  dateCreated: string | null;
-  lastActivityDate: string | null;
-  scheduledBookingDate: string | null;
-  sellerManager: LeadUser | null;
-  sellerAdvisor: LeadUser | null;
   leadTeamRating: LeadTeamRating | null;
+  stageId: string | null;
+  stageName: string | null;
+  assignedTo: number | null;
+  assignedToName: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  tabs: LeadTab[];
   notes: LeadNote[];
-  currentTabs: ManagerLeadTab[];
 }
 
-interface PerformanceMetric {
+interface ManagerLeadsResponse {
+  hotLeads: Lead[];
+  liveOffers: Lead[];
+  pipelineFollowUps: Lead[];
+  newLeads: Lead[];
+}
+
+interface GoalMetric {
   actual: number;
   target: number;
   percentage: number;
   conversionRate?: number;
 }
 
-interface UserPerformance {
+interface ManagerGoals {
   userId: number;
   email: string;
   name: string;
-  slug: string | null;
-  initials: string | null;
-  offersPresented: PerformanceMetric;
-  offersAccepted: PerformanceMetric;
-  psasExecuted: PerformanceMetric;
-  leadsConverted: PerformanceMetric;
-}
-
-interface TabCount {
-  tab: ManagerLeadTab;
-  count: number;
-}
-
-interface ManagerLeadsResponse {
-  leads: {
-    leads: Lead[];
-    totalCount: number;
-    hasNextPage: boolean;
-  };
-  tabCounts: TabCount[];
+  initials: string;
+  goalId: string | null;
+  goalName: string | null;
+  startingDate: string | null;
+  endDate: string | null;
+  firstCallSmsAttempts: GoalMetric;
+  newSellersContacted: GoalMetric;
+  followUpsAttempted: GoalMetric;
+  followUpsConnected: GoalMetric;
+  offersPresented: GoalMetric;
+  offersAccepted: GoalMetric;
+  psasExecuted: GoalMetric;
+  leadsConverted: GoalMetric;
 }
 
 // ─── Queries ───────────────────────────────────────────────────────────────────
 
+const USER_BY_SLUG_QUERY = `
+  query GetUserBySlug($slug: String!) {
+    users(where: { slug: { _eq: $slug } }, limit: 1) {
+      id slug email first_name last_name initials role avatar
+    }
+  }
+`;
+
 const MANAGER_LEADS_QUERY = `
-  query GetManagerLeads($managerId: Int!, $tab: String, $limit: Int!, $offset: Int!) {
-    manager_lead_tracking(
-      where: {
-        manager_id: { _eq: $managerId }
-        tab: { _eq: $tab }
-      }
-      limit: $limit
-      offset: $offset
+  query GetManagerLeads($managerId: Int!) {
+    hotLeads: manager_lead_tracking(
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" } }
       order_by: { added_at: desc }
     ) {
-      lead_id
-      tab
+      lead_id tab added_at
       crm_lead {
-        id
-        full_name
-        email
-        phone
-        address
-        city
-        state
-        zip_code
-        property_type
-        lead_source
-        lead_status
-        result
-        date_created
-        last_activity_date
-        scheduled_booking_date
-        lead_team_rating
-        seller_manager {
-          id
-          email
-          first_name
-          last_name
-          slug
-          initials
-        }
-        seller_advisor {
-          id
-          email
-          first_name
-          last_name
-          slug
-          initials
-        }
+        id full_name email phone address city state zip_code
+        lead_team_rating stage_id lead_status date_created updated_at
+        seller_manager_id
+        seller_manager { id first_name last_name }
       }
     }
-    manager_lead_tracking_aggregate(
-      where: {
-        manager_id: { _eq: $managerId }
-        tab: { _eq: $tab }
-      }
+    liveOffers: manager_lead_tracking(
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" } }
+      order_by: { added_at: desc }
     ) {
-      aggregate { count }
+      lead_id tab added_at
+      crm_lead {
+        id full_name email phone address city state zip_code
+        lead_team_rating stage_id lead_status date_created updated_at
+        seller_manager_id
+        seller_manager { id first_name last_name }
+      }
     }
-    hot_lead: manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" } }) {
-      aggregate { count }
+    pipelineFollowUps: manager_lead_tracking(
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "PIPELINE_FOLLOW_UP" } }
+      order_by: { added_at: desc }
+    ) {
+      lead_id tab added_at
+      crm_lead {
+        id full_name email phone address city state zip_code
+        lead_team_rating stage_id lead_status date_created updated_at
+        seller_manager_id
+        seller_manager { id first_name last_name }
+      }
     }
-    live_offer: manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" } }) {
-      aggregate { count }
-    }
-    pipeline_follow_up: manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId }, tab: { _eq: "PIPELINE_FOLLOW_UP" } }) {
-      aggregate { count }
-    }
-    new_lead: manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId }, tab: { _eq: "NEW_LEAD" } }) {
-      aggregate { count }
+    newLeads: manager_lead_tracking(
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "NEW_LEAD" } }
+      order_by: { added_at: desc }
+    ) {
+      lead_id tab added_at
+      crm_lead {
+        id full_name email phone address city state zip_code
+        lead_team_rating stage_id lead_status date_created updated_at
+        seller_manager_id
+        seller_manager { id first_name last_name }
+      }
     }
   }
 `;
 
-const ALL_MANAGER_LEADS_QUERY = `
-  query GetAllManagerLeads($managerId: Int!, $limit: Int!, $offset: Int!) {
-    manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId } }
-      limit: $limit
-      offset: $offset
-      order_by: { added_at: desc }
+const LEAD_NOTES_QUERY = `
+  query GetLeadNotes($leadIds: [uuid!]!) {
+    crm_activities(
+      where: { lead_id: { _in: $leadIds }, activity_type_id: { _eq: 4 } }
+      order_by: { created_at: desc }
     ) {
-      lead_id
-      tab
-      crm_lead {
-        id
-        full_name
-        email
-        phone
-        address
-        city
-        state
-        zip_code
-        property_type
-        lead_source
-        lead_status
-        result
-        date_created
-        last_activity_date
-        scheduled_booking_date
-        lead_team_rating
-        seller_manager {
-          id
-          email
-          first_name
-          last_name
-          slug
-          initials
-        }
-        seller_advisor {
-          id
-          email
-          first_name
-          last_name
-          slug
-          initials
-        }
-      }
-    }
-    manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId } }) {
-      aggregate { count }
-    }
-    hot_lead: manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" } }) {
-      aggregate { count }
-    }
-    live_offer: manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" } }) {
-      aggregate { count }
-    }
-    pipeline_follow_up: manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId }, tab: { _eq: "PIPELINE_FOLLOW_UP" } }) {
-      aggregate { count }
-    }
-    new_lead: manager_lead_tracking_aggregate(where: { manager_id: { _eq: $managerId }, tab: { _eq: "NEW_LEAD" } }) {
-      aggregate { count }
+      id lead_id notes created_at created_by
+      user { first_name last_name }
     }
   }
 `;
 
-const LEAD_DETAILS_QUERY = `
-  query GetLeadDetails($leadId: uuid!) {
+const LEAD_TABS_QUERY = `
+  query GetLeadTabs($leadIds: [uuid!]!, $managerId: Int!) {
+    manager_lead_tracking(
+      where: { lead_id: { _in: $leadIds }, manager_id: { _eq: $managerId } }
+    ) {
+      lead_id tab
+    }
+  }
+`;
+
+const SEARCH_LEADS_QUERY = `
+  query SearchLeads($query: String!, $limit: Int!) {
+    crm_leads(
+      where: {
+        _or: [
+          { full_name: { _ilike: $query } }
+          { email: { _ilike: $query } }
+          { phone: { _ilike: $query } }
+        ]
+      }
+      limit: $limit
+      order_by: { date_created: desc }
+    ) {
+      id full_name email phone address city state zip_code
+      lead_team_rating stage_id lead_status date_created updated_at
+      seller_manager_id
+      seller_manager { id first_name last_name }
+    }
+  }
+`;
+
+const LEAD_BY_ID_QUERY = `
+  query GetLeadById($leadId: uuid!) {
     crm_leads_by_pk(id: $leadId) {
-      id
-      full_name
-      email
-      phone
-      address
-      city
-      state
-      zip_code
-      property_type
-      lead_source
-      lead_status
-      result
-      date_created
-      last_activity_date
-      scheduled_booking_date
-      lead_team_rating
-      seller_manager {
-        id
-        email
-        first_name
-        last_name
-        slug
-        initials
-      }
-      seller_advisor {
-        id
-        email
-        first_name
-        last_name
-        slug
-        initials
-      }
+      id full_name email phone address city state zip_code
+      lead_team_rating stage_id lead_status date_created updated_at
+      seller_manager_id
+      seller_manager { id first_name last_name }
     }
     crm_activities(
       where: { lead_id: { _eq: $leadId }, activity_type_id: { _eq: 4 } }
       order_by: { created_at: desc }
     ) {
-      notes
-      created_at
+      id notes created_at created_by
+      user { first_name last_name }
     }
     manager_lead_tracking(where: { lead_id: { _eq: $leadId } }) {
       tab
@@ -272,12 +215,7 @@ const LEAD_DETAILS_QUERY = `
 const MANAGER_INFO_QUERY = `
   query GetManagerInfo($managerId: Int!) {
     users_by_pk(id: $managerId) {
-      id
-      email
-      first_name
-      last_name
-      slug
-      initials
+      id email first_name last_name initials
     }
   }
 `;
@@ -308,139 +246,115 @@ const REMOVE_LEAD_FROM_TAB_MUTATION = `
 `;
 
 const UPDATE_LEAD_RATING_MUTATION = `
-  mutation UpdateLeadRating($leadId: uuid!, $rating: String!) {
+  mutation UpdateLeadRating($leadId: uuid!, $rating: String) {
     update_crm_leads_by_pk(
       pk_columns: { id: $leadId }
       _set: { lead_team_rating: $rating }
     ) {
-      id
-      lead_team_rating
+      id lead_team_rating
+    }
+  }
+`;
+
+const ADD_LEAD_NOTE_MUTATION = `
+  mutation AddLeadNote($leadId: uuid!, $notes: jsonb!, $createdBy: Int!) {
+    insert_crm_activities_one(
+      object: {
+        lead_id: $leadId
+        activity_type_id: 4
+        notes: $notes
+        created_by: $createdBy
+        seller_id: $createdBy
+      }
+    ) {
+      id notes created_at created_by
+      user { first_name last_name }
     }
   }
 `;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function mapUser(user: any): LeadUser | null {
-  if (!user) return null;
-  return {
-    id: user.id,
-    email: user.email,
-    firstName: user.first_name,
-    lastName: user.last_name,
-    slug: user.slug,
-    initials: user.initials,
-  };
-}
+function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead {
+  const lead = data.crm_lead || data;
+  const manager = lead.seller_manager;
+  const assignedToName = manager
+    ? `${manager.first_name ?? ""} ${manager.last_name ?? ""}`.trim()
+    : null;
 
-function mapLead(leadData: any, tabs: ManagerLeadTab[] = []): Lead {
-  const lead = leadData.crm_lead || leadData;
   return {
     id: lead.id,
-    fullName: lead.full_name,
+    name: lead.full_name ?? "",
     email: lead.email,
     phone: lead.phone,
     address: lead.address,
     city: lead.city,
     state: lead.state,
     zipCode: lead.zip_code,
-    propertyType: lead.property_type,
-    leadSource: lead.lead_source,
-    leadStatus: lead.lead_status,
-    result: lead.result,
-    dateCreated: lead.date_created,
-    lastActivityDate: lead.last_activity_date,
-    scheduledBookingDate: lead.scheduled_booking_date,
-    sellerManager: mapUser(lead.seller_manager),
-    sellerAdvisor: mapUser(lead.seller_advisor),
     leadTeamRating: lead.lead_team_rating?.toUpperCase() as LeadTeamRating | null,
-    notes: [],
-    currentTabs: tabs,
+    stageId: lead.stage_id,
+    stageName: lead.lead_status,
+    assignedTo: lead.seller_manager_id,
+    assignedToName,
+    createdAt: lead.date_created,
+    updatedAt: lead.updated_at,
+    tabs,
+    notes,
   };
 }
 
-function parseNotes(activities: any[]): LeadNote[] {
-  return activities
-    .map((activity) => {
-      try {
-        const notesData = typeof activity.notes === "string" 
-          ? JSON.parse(activity.notes) 
-          : activity.notes;
-        return {
-          content: notesData?.content ?? "",
-          timestamp: notesData?.timestamp ?? activity.created_at,
-        };
-      } catch {
-        return {
-          content: activity.notes ?? "",
-          timestamp: activity.created_at,
-        };
-      }
-    })
-    .filter((note) => note.content);
+function parseNote(activity: any): LeadNote {
+  let content = "";
+  let timestamp = activity.created_at;
+
+  try {
+    const notesData = typeof activity.notes === "string"
+      ? JSON.parse(activity.notes)
+      : activity.notes;
+    content = notesData?.content ?? "";
+    timestamp = notesData?.timestamp ?? activity.created_at;
+  } catch {
+    content = typeof activity.notes === "string" ? activity.notes : "";
+  }
+
+  const user = activity.user;
+  const createdByName = user
+    ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
+    : "Unknown";
+
+  return {
+    id: activity.id,
+    content,
+    timestamp,
+    createdBy: activity.created_by,
+    createdByName,
+  };
 }
 
 // ─── Service ───────────────────────────────────────────────────────────────────
 
 export class LeadManagementService {
-  static async getManagerLeads(
-    managerId: number,
-    tab?: ManagerLeadTab,
-    limit = 20,
-    offset = 0
-  ): Promise<ManagerLeadsResponse> {
-    const query = tab ? MANAGER_LEADS_QUERY : ALL_MANAGER_LEADS_QUERY;
-    const variables = tab
-      ? { managerId, tab, limit, offset }
-      : { managerId, limit, offset };
-
-    const data = await hasuraQuery<any>(query, variables);
-
-    const leadsData = data.manager_lead_tracking ?? [];
-    const totalCount = data.manager_lead_tracking_aggregate?.aggregate?.count ?? 0;
-
-    const leads = leadsData.map((item: any) => {
-      const currentTab = item.tab as ManagerLeadTab;
-      return mapLead(item, [currentTab]);
-    });
+  static async getUserBySlug(slug: string): Promise<User | null> {
+    const data = await hasuraQuery<any>(USER_BY_SLUG_QUERY, { slug });
+    const user = data.users?.[0];
+    if (!user) return null;
 
     return {
-      leads: {
-        leads,
-        totalCount,
-        hasNextPage: offset + limit < totalCount,
-      },
-      tabCounts: [
-        { tab: "HOT_LEAD", count: data.hot_lead?.aggregate?.count ?? 0 },
-        { tab: "LIVE_OFFER", count: data.live_offer?.aggregate?.count ?? 0 },
-        { tab: "PIPELINE_FOLLOW_UP", count: data.pipeline_follow_up?.aggregate?.count ?? 0 },
-        { tab: "NEW_LEAD", count: data.new_lead?.aggregate?.count ?? 0 },
-      ],
+      id: user.id,
+      slug: user.slug ?? "",
+      name: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
+      email: user.email ?? "",
+      initials: user.initials ?? "",
+      role: user.role ?? "",
+      avatar: user.avatar,
     };
   }
 
-  static async getLeadDetails(leadId: string): Promise<Lead | null> {
-    const data = await hasuraQuery<any>(LEAD_DETAILS_QUERY, { leadId });
-
-    const leadData = data.crm_leads_by_pk;
-    if (!leadData) return null;
-
-    const tabs = (data.manager_lead_tracking ?? []).map(
-      (t: any) => t.tab as ManagerLeadTab
-    );
-    const notes = parseNotes(data.crm_activities ?? []);
-
-    const lead = mapLead(leadData, tabs);
-    lead.notes = notes;
-
-    return lead;
-  }
-
-  static async getManagerPerformance(
-    managerId: number,
+  static async getManagerGoalsByUserId(
+    userId: number,
     timeframe: Timeframe
-  ): Promise<UserPerformance | null> {
-    const managerData = await hasuraQuery<any>(MANAGER_INFO_QUERY, { managerId });
+  ): Promise<ManagerGoals | null> {
+    const managerData = await hasuraQuery<any>(MANAGER_INFO_QUERY, { managerId: userId });
     const manager = managerData.users_by_pk;
     if (!manager) return null;
 
@@ -456,10 +370,17 @@ export class LeadManagementService {
 
     return {
       userId: manager.id,
-      email: manager.email,
+      email: manager.email ?? "",
       name: `${manager.first_name ?? ""} ${manager.last_name ?? ""}`.trim(),
-      slug: manager.slug,
-      initials: manager.initials,
+      initials: manager.initials ?? "",
+      goalId: goal?.id ?? null,
+      goalName: goal?.Name ?? null,
+      startingDate: goal?.Starting_Date ?? null,
+      endDate: goal?.End_Date ?? null,
+      firstCallSmsAttempts: createMetric(0, 0),
+      newSellersContacted: createMetric(0, 0),
+      followUpsAttempted: createMetric(0, 0),
+      followUpsConnected: createMetric(0, 0),
       offersPresented: createMetric(actuals.offersPresented, goal?.Offers_Presented_Target ?? null),
       offersAccepted: createMetric(actuals.offersAccepted, goal?.Offers_Accepted_Target ?? null),
       psasExecuted: createMetric(actuals.psasExecuted, goal?.PSA_s_Executed_Target ?? null),
@@ -467,51 +388,123 @@ export class LeadManagementService {
     };
   }
 
+  static async getManagerLeads(managerId: number): Promise<ManagerLeadsResponse> {
+    const data = await hasuraQuery<any>(MANAGER_LEADS_QUERY, { managerId });
+
+    const allLeadIds = [
+      ...data.hotLeads,
+      ...data.liveOffers,
+      ...data.pipelineFollowUps,
+      ...data.newLeads,
+    ]
+      .map((item: any) => item.lead_id)
+      .filter((id: string, index: number, arr: string[]) => arr.indexOf(id) === index);
+
+    // Fetch notes and tabs for all leads
+    const [notesData, tabsData] = await Promise.all([
+      allLeadIds.length > 0
+        ? hasuraQuery<any>(LEAD_NOTES_QUERY, { leadIds: allLeadIds })
+        : { crm_activities: [] },
+      hasuraQuery<any>(LEAD_TABS_QUERY, { leadIds: allLeadIds, managerId }),
+    ]);
+
+    // Group notes by lead_id
+    const notesByLead = new Map<string, LeadNote[]>();
+    for (const activity of notesData.crm_activities ?? []) {
+      const leadId = activity.lead_id;
+      if (!notesByLead.has(leadId)) notesByLead.set(leadId, []);
+      notesByLead.get(leadId)!.push(parseNote(activity));
+    }
+
+    // Group tabs by lead_id
+    const tabsByLead = new Map<string, LeadTab[]>();
+    for (const tracking of tabsData.manager_lead_tracking ?? []) {
+      const leadId = tracking.lead_id;
+      if (!tabsByLead.has(leadId)) tabsByLead.set(leadId, []);
+      tabsByLead.get(leadId)!.push(tracking.tab as LeadTab);
+    }
+
+    const mapLeads = (items: any[]) =>
+      items.map((item) => {
+        const leadId = item.lead_id;
+        return mapLead(item, tabsByLead.get(leadId) ?? [], notesByLead.get(leadId) ?? []);
+      });
+
+    return {
+      hotLeads: mapLeads(data.hotLeads ?? []),
+      liveOffers: mapLeads(data.liveOffers ?? []),
+      pipelineFollowUps: mapLeads(data.pipelineFollowUps ?? []),
+      newLeads: mapLeads(data.newLeads ?? []),
+    };
+  }
+
+  static async searchLeads(query: string, limit = 20): Promise<Lead[]> {
+    const searchPattern = `%${query}%`;
+    const data = await hasuraQuery<any>(SEARCH_LEADS_QUERY, {
+      query: searchPattern,
+      limit,
+    });
+
+    return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
+  }
+
   static async addLeadToTab(
     managerId: number,
     leadId: string,
-    tab: ManagerLeadTab
-  ): Promise<boolean> {
-    try {
-      await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab });
-      return true;
-    } catch (error) {
-      console.error("[LeadManagement] Error adding lead to tab:", error);
-      return false;
-    }
+    tab: LeadTab
+  ): Promise<Lead> {
+    await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab });
+    return this.getLeadById(leadId, managerId);
   }
 
   static async removeLeadFromTab(
     managerId: number,
     leadId: string,
-    tab: ManagerLeadTab
+    tab: LeadTab
   ): Promise<boolean> {
-    try {
-      const data = await hasuraQuery<any>(REMOVE_LEAD_FROM_TAB_MUTATION, {
-        managerId,
-        leadId,
-        tab,
-      });
-      return (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
-    } catch (error) {
-      console.error("[LeadManagement] Error removing lead from tab:", error);
-      return false;
-    }
+    const data = await hasuraQuery<any>(REMOVE_LEAD_FROM_TAB_MUTATION, {
+      managerId,
+      leadId,
+      tab,
+    });
+    return (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
   }
 
-  static async updateLeadTeamRating(
+  static async updateLeadRating(
     leadId: string,
-    rating: LeadTeamRating
-  ): Promise<Lead | null> {
-    try {
-      await hasuraQuery<any>(UPDATE_LEAD_RATING_MUTATION, {
-        leadId,
-        rating: rating.toLowerCase(),
-      });
-      return this.getLeadDetails(leadId);
-    } catch (error) {
-      console.error("[LeadManagement] Error updating lead rating:", error);
-      return null;
-    }
+    rating: LeadTeamRating | null
+  ): Promise<Lead> {
+    await hasuraQuery<any>(UPDATE_LEAD_RATING_MUTATION, {
+      leadId,
+      rating: rating?.toLowerCase() ?? null,
+    });
+    return this.getLeadById(leadId);
+  }
+
+  static async addLeadNote(
+    leadId: string,
+    content: string,
+    createdBy: number
+  ): Promise<LeadNote> {
+    const timestamp = new Date().toISOString();
+    const notes = { content, timestamp };
+
+    const data = await hasuraQuery<any>(ADD_LEAD_NOTE_MUTATION, {
+      leadId,
+      notes,
+      createdBy,
+    });
+
+    return parseNote(data.insert_crm_activities_one);
+  }
+
+  private static async getLeadById(leadId: string, managerId?: number): Promise<Lead> {
+    const data = await hasuraQuery<any>(LEAD_BY_ID_QUERY, { leadId });
+
+    const lead = data.crm_leads_by_pk;
+    const notes = (data.crm_activities ?? []).map(parseNote);
+    const tabs = (data.manager_lead_tracking ?? []).map((t: any) => t.tab as LeadTab);
+
+    return mapLead(lead, tabs, notes);
   }
 }

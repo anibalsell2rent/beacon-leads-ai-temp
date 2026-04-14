@@ -1,51 +1,50 @@
 import { LeadManagementService } from "../../services/leadManagement.service";
 import { Timeframe } from "../../services/teamPerformance.service";
 
-type ManagerLeadTab = "HOT_LEAD" | "LIVE_OFFER" | "PIPELINE_FOLLOW_UP" | "NEW_LEAD";
+type LeadTab = "HOT_LEAD" | "LIVE_OFFER" | "PIPELINE_FOLLOW_UP" | "NEW_LEAD";
 type LeadTeamRating = "AMAZING" | "GOOD" | "NEUTRAL" | "BAD";
 
 export const leadManagementResolvers = {
   Query: {
-    getManagerLeads: async (
-      _: any,
-      {
-        managerId,
-        tab,
-        limit = 20,
-        offset = 0,
-      }: {
-        managerId: number;
-        tab?: ManagerLeadTab;
-        limit?: number;
-        offset?: number;
+    getUserBySlug: async (_: any, { slug }: { slug: string }) => {
+      try {
+        return await LeadManagementService.getUserBySlug(slug);
+      } catch (error: any) {
+        console.error("[LeadManagement] Error getUserBySlug:", error);
+        throw new Error(`Failed to fetch user: ${error.message}`);
       }
+    },
+
+    getManagerGoalsByUserId: async (
+      _: any,
+      { userId, timeframe }: { userId: number; timeframe: Timeframe }
     ) => {
       try {
-        return await LeadManagementService.getManagerLeads(managerId, tab, limit, offset);
+        return await LeadManagementService.getManagerGoalsByUserId(userId, timeframe);
       } catch (error: any) {
-        console.error("[LeadManagement Resolver] Error getManagerLeads:", error);
+        console.error("[LeadManagement] Error getManagerGoalsByUserId:", error);
+        throw new Error(`Failed to fetch manager goals: ${error.message}`);
+      }
+    },
+
+    getManagerLeads: async (_: any, { managerId }: { managerId: number }) => {
+      try {
+        return await LeadManagementService.getManagerLeads(managerId);
+      } catch (error: any) {
+        console.error("[LeadManagement] Error getManagerLeads:", error);
         throw new Error(`Failed to fetch manager leads: ${error.message}`);
       }
     },
 
-    getLeadDetails: async (_: any, { leadId }: { leadId: string }) => {
-      try {
-        return await LeadManagementService.getLeadDetails(leadId);
-      } catch (error: any) {
-        console.error("[LeadManagement Resolver] Error getLeadDetails:", error);
-        throw new Error(`Failed to fetch lead details: ${error.message}`);
-      }
-    },
-
-    getManagerPerformance: async (
+    searchLeads: async (
       _: any,
-      { managerId, timeframe }: { managerId: number; timeframe: Timeframe }
+      { query, limit = 20 }: { query: string; limit?: number }
     ) => {
       try {
-        return await LeadManagementService.getManagerPerformance(managerId, timeframe);
+        return await LeadManagementService.searchLeads(query, limit);
       } catch (error: any) {
-        console.error("[LeadManagement Resolver] Error getManagerPerformance:", error);
-        throw new Error(`Failed to fetch manager performance: ${error.message}`);
+        console.error("[LeadManagement] Error searchLeads:", error);
+        throw new Error(`Failed to search leads: ${error.message}`);
       }
     },
   },
@@ -53,53 +52,49 @@ export const leadManagementResolvers = {
   Mutation: {
     addLeadToTab: async (
       _: any,
-      {
-        managerId,
-        leadId,
-        tab,
-      }: {
-        managerId: number;
-        leadId: string;
-        tab: ManagerLeadTab;
-      }
+      { managerId, leadId, tab }: { managerId: number; leadId: string; tab: LeadTab }
     ) => {
       try {
         return await LeadManagementService.addLeadToTab(managerId, leadId, tab);
       } catch (error: any) {
-        console.error("[LeadManagement Resolver] Error addLeadToTab:", error);
+        console.error("[LeadManagement] Error addLeadToTab:", error);
         throw new Error(`Failed to add lead to tab: ${error.message}`);
       }
     },
 
     removeLeadFromTab: async (
       _: any,
-      {
-        managerId,
-        leadId,
-        tab,
-      }: {
-        managerId: number;
-        leadId: string;
-        tab: ManagerLeadTab;
-      }
+      { managerId, leadId, tab }: { managerId: number; leadId: string; tab: LeadTab }
     ) => {
       try {
         return await LeadManagementService.removeLeadFromTab(managerId, leadId, tab);
       } catch (error: any) {
-        console.error("[LeadManagement Resolver] Error removeLeadFromTab:", error);
+        console.error("[LeadManagement] Error removeLeadFromTab:", error);
         throw new Error(`Failed to remove lead from tab: ${error.message}`);
       }
     },
 
-    updateLeadTeamRating: async (
+    updateLeadRating: async (
       _: any,
-      { leadId, rating }: { leadId: string; rating: LeadTeamRating }
+      { leadId, rating }: { leadId: string; rating?: LeadTeamRating }
     ) => {
       try {
-        return await LeadManagementService.updateLeadTeamRating(leadId, rating);
+        return await LeadManagementService.updateLeadRating(leadId, rating ?? null);
       } catch (error: any) {
-        console.error("[LeadManagement Resolver] Error updateLeadTeamRating:", error);
+        console.error("[LeadManagement] Error updateLeadRating:", error);
         throw new Error(`Failed to update lead rating: ${error.message}`);
+      }
+    },
+
+    addLeadNote: async (
+      _: any,
+      { leadId, content, createdBy }: { leadId: string; content: string; createdBy: number }
+    ) => {
+      try {
+        return await LeadManagementService.addLeadNote(leadId, content, createdBy);
+      } catch (error: any) {
+        console.error("[LeadManagement] Error addLeadNote:", error);
+        throw new Error(`Failed to add lead note: ${error.message}`);
       }
     },
   },

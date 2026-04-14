@@ -1,7 +1,7 @@
 import { gql } from "apollo-server-express";
 
 export const leadManagementTypeDefs = gql`
-  enum ManagerLeadTab {
+  enum LeadTab {
     HOT_LEAD
     LIVE_OFFER
     PIPELINE_FOLLOW_UP
@@ -15,110 +15,108 @@ export const leadManagementTypeDefs = gql`
     BAD
   }
 
-  type LeadNote {
-    content: String!
-    timestamp: String!
+  type User {
+    id: Int!
+    slug: String!
+    name: String!
+    email: String!
+    initials: String!
+    role: String!
+    avatar: String
   }
 
-  type LeadUser {
+  type LeadNote {
     id: Int!
-    email: String!
-    firstName: String
-    lastName: String
-    slug: String
-    initials: String
+    content: String!
+    timestamp: String!
+    createdBy: Int!
+    createdByName: String!
   }
 
   type Lead {
-    id: ID!
-    fullName: String
+    id: String!
+    name: String!
     email: String
     phone: String
     address: String
     city: String
     state: String
     zipCode: String
-    propertyType: String
-    leadSource: String
-    leadStatus: String
-    result: String
-    dateCreated: String
-    lastActivityDate: String
-    scheduledBookingDate: String
-    sellerManager: LeadUser
-    sellerAdvisor: LeadUser
     leadTeamRating: LeadTeamRating
+    stageId: String
+    stageName: String
+    assignedTo: Int
+    assignedToName: String
+    createdAt: String
+    updatedAt: String
+    tabs: [LeadTab!]!
     notes: [LeadNote!]!
-    currentTabs: [ManagerLeadTab!]!
-  }
-
-  type LeadConnection {
-    leads: [Lead!]!
-    totalCount: Int!
-    hasNextPage: Boolean!
-  }
-
-  type PerformanceMetric {
-    actual: Int!
-    target: Int!
-    percentage: Float!
-    conversionRate: Float
-  }
-
-  type UserPerformance {
-    userId: Int!
-    email: String!
-    name: String!
-    slug: String
-    initials: String
-    offersPresented: PerformanceMetric!
-    offersAccepted: PerformanceMetric!
-    psasExecuted: PerformanceMetric!
-    leadsConverted: PerformanceMetric!
-  }
-
-  type TabCount {
-    tab: ManagerLeadTab!
-    count: Int!
   }
 
   type ManagerLeadsResponse {
-    leads: LeadConnection!
-    tabCounts: [TabCount!]!
+    hotLeads: [Lead!]!
+    liveOffers: [Lead!]!
+    pipelineFollowUps: [Lead!]!
+    newLeads: [Lead!]!
+  }
+
+  type ManagerGoals {
+    userId: Int!
+    email: String!
+    name: String!
+    initials: String!
+    goalId: String
+    goalName: String
+    startingDate: String
+    endDate: String
+    firstCallSmsAttempts: PerformanceGoalMetric!
+    newSellersContacted: PerformanceGoalMetric!
+    followUpsAttempted: PerformanceGoalMetric!
+    followUpsConnected: PerformanceGoalMetric!
+    offersPresented: PerformanceGoalMetric!
+    offersAccepted: PerformanceGoalMetric!
+    psasExecuted: PerformanceGoalMetric!
+    leadsConverted: PerformanceGoalMetric!
   }
 
   extend type Query {
-    getManagerLeads(
-      managerId: Int!
-      tab: ManagerLeadTab
-      limit: Int
-      offset: Int
-    ): ManagerLeadsResponse!
+    getUserBySlug(slug: String!): User
 
-    getLeadDetails(leadId: ID!): Lead
-
-    getManagerPerformance(
-      managerId: Int!
+    getManagerGoalsByUserId(
+      userId: Int!
       timeframe: Timeframe!
-    ): UserPerformance
+    ): ManagerGoals
+
+    getManagerLeads(managerId: Int!): ManagerLeadsResponse!
+
+    searchLeads(
+      query: String!
+      limit: Int = 20
+    ): [Lead!]!
   }
 
   extend type Mutation {
     addLeadToTab(
       managerId: Int!
-      leadId: ID!
-      tab: ManagerLeadTab!
-    ): Boolean!
+      leadId: String!
+      tab: LeadTab!
+    ): Lead!
 
     removeLeadFromTab(
       managerId: Int!
-      leadId: ID!
-      tab: ManagerLeadTab!
+      leadId: String!
+      tab: LeadTab!
     ): Boolean!
 
-    updateLeadTeamRating(
-      leadId: ID!
-      rating: LeadTeamRating!
-    ): Lead
+    updateLeadRating(
+      leadId: String!
+      rating: LeadTeamRating
+    ): Lead!
+
+    addLeadNote(
+      leadId: String!
+      content: String!
+      createdBy: Int!
+    ): LeadNote!
   }
 `;

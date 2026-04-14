@@ -16,6 +16,7 @@ import { dealsTypeDefs } from '../graphql/types/deals.types';
 import { transactionCoordinatorTypeDefs } from '../graphql/types/transactionCoordinator.types';
 import { contactHistoryTypeDefs } from '../graphql/types/contactHistory.types';
 import { performanceGoalsTypeDefs } from '../graphql/types/performanceGoals.types';
+import { leadManagementTypeDefs } from '../graphql/types/leadManagement.types';
 
 const rootTypeDefs = gql`
 type Query {
@@ -41,5 +42,6 @@ export default [
   dealsTypeDefs,
   transactionCoordinatorTypeDefs,
   contactHistoryTypeDefs,
-  performanceGoalsTypeDefs
+  performanceGoalsTypeDefs,
+  leadManagementTypeDefs
 ];

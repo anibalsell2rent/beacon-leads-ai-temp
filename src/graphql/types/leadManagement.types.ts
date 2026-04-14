@@ -46,7 +46,11 @@ export const leadManagementTypeDefs = gql`
     stageName: String
     assignedTo: Int
     assignedToName: String
-    createdAt: String
+    leadScore: Int
+    s2rNetRevenue: Float
+    sellerSegment: String
+    marketingSource: String
+    dateCreated: String
     updatedAt: String
     tabs: [LeadTab!]!
     notes: [LeadNote!]!

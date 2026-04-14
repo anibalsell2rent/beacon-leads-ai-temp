@@ -45,7 +45,11 @@ interface Lead {
   stageName: string | null;
   assignedTo: number | null;
   assignedToName: string | null;
-  createdAt: string | null;
+  leadScore: number | null;
+  s2rNetRevenue: number | null;
+  sellerSegment: string | null;
+  marketingSource: string | null;
+  dateCreated: string | null;
   updatedAt: string | null;
   tabs: LeadTab[];
   notes: LeadNote[];
@@ -106,6 +110,7 @@ const MANAGER_LEADS_QUERY = `
       crm_lead {
         id full_name email phone address city state zip_code
         lead_team_rating stage_id lead_status date_created updated_at
+        lead_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
       }
@@ -118,6 +123,7 @@ const MANAGER_LEADS_QUERY = `
       crm_lead {
         id full_name email phone address city state zip_code
         lead_team_rating stage_id lead_status date_created updated_at
+        lead_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
       }
@@ -130,6 +136,7 @@ const MANAGER_LEADS_QUERY = `
       crm_lead {
         id full_name email phone address city state zip_code
         lead_team_rating stage_id lead_status date_created updated_at
+        lead_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
       }
@@ -142,6 +149,7 @@ const MANAGER_LEADS_QUERY = `
       crm_lead {
         id full_name email phone address city state zip_code
         lead_team_rating stage_id lead_status date_created updated_at
+        lead_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
       }
@@ -284,7 +292,7 @@ function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead 
     ? `${manager.first_name ?? ""} ${manager.last_name ?? ""}`.trim()
     : null;
 
-  return {
+return {
     id: lead.id,
     name: lead.full_name ?? "",
     email: lead.email,
@@ -298,7 +306,11 @@ function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead 
     stageName: lead.lead_status,
     assignedTo: lead.seller_manager_id,
     assignedToName,
-    createdAt: lead.date_created,
+    leadScore: lead.lead_score,
+    s2rNetRevenue: lead.s2r_net_revenue,
+    sellerSegment: lead.seller_segment,
+    marketingSource: lead.marketing_source,
+    dateCreated: lead.date_created,
     updatedAt: lead.updated_at,
     tabs,
     notes,

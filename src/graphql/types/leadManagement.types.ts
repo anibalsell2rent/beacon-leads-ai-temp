@@ -22,7 +22,6 @@ export const leadManagementTypeDefs = gql`
     email: String!
     initials: String!
     role: String!
-    avatar: String
   }
 
   type LeadNote {

@@ -21,7 +21,6 @@ interface User {
   email: string;
   initials: string;
   role: string;
-  avatar: string | null;
 }
 
 interface LeadNote {
@@ -90,7 +89,7 @@ interface ManagerGoals {
 const USER_BY_SLUG_QUERY = `
   query GetUserBySlug($slug: String!) {
     users(where: { slug: { _eq: $slug } }, limit: 1) {
-      id slug email first_name last_name initials role avatar
+      id slug email first_name last_name initials role
     }
   }
 `;
@@ -346,7 +345,6 @@ export class LeadManagementService {
       email: user.email ?? "",
       initials: user.initials ?? "",
       role: user.role ?? "",
-      avatar: user.avatar,
     };
   }
 

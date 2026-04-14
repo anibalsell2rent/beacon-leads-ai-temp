@@ -124,10 +124,12 @@ const MANAGER_LEAD_IDS_QUERY = `
 const LEADS_BY_IDS_QUERY = `
   query GetLeadsByIds($leadIds: [uuid!]!) {
     crm_leads(where: { id: { _in: $leadIds } }) {
-      id full_name email phone address city state zip_code
-      lead_team_rating stage_id lead_status date_created updated_at
+      id lead_team_rating stage_id lead_status date_created updated_at
       lead_score s2r_net_revenue seller_segment marketing_source
       seller_manager_id
+      crm_seller {
+        first_name last_name email phone address city state zip_code
+      }
     }
     users { id first_name last_name }
   }
@@ -159,19 +161,23 @@ const SEARCH_LEADS_QUERY = `
   query SearchLeads($query: String!, $limit: Int!) {
     crm_leads(
       where: {
-        _or: [
-          { full_name: { _ilike: $query } }
-          { email: { _ilike: $query } }
-          { phone: { _ilike: $query } }
-        ]
+        crm_seller: {
+          _or: [
+            { first_name: { _ilike: $query } }
+            { last_name: { _ilike: $query } }
+            { email: { _ilike: $query } }
+            { phone: { _ilike: $query } }
+          ]
+        }
       }
       limit: $limit
       order_by: { date_created: desc }
     ) {
-      id full_name email phone address city state zip_code
-      lead_team_rating stage_id lead_status date_created updated_at
+      id lead_team_rating stage_id lead_status date_created updated_at
       seller_manager_id
-      seller_manager { id first_name last_name }
+      crm_seller {
+        first_name last_name email phone address city state zip_code
+      }
     }
   }
 `;
@@ -179,10 +185,12 @@ const SEARCH_LEADS_QUERY = `
 const LEAD_BY_ID_QUERY = `
   query GetLeadById($leadId: uuid!) {
     crm_leads_by_pk(id: $leadId) {
-      id full_name email phone address city state zip_code
-      lead_team_rating stage_id lead_status date_created updated_at
+      id lead_team_rating stage_id lead_status date_created updated_at
+      lead_score s2r_net_revenue seller_segment marketing_source
       seller_manager_id
-      seller_manager { id first_name last_name }
+      crm_seller {
+        first_name last_name email phone address city state zip_code
+      }
     }
     crm_activities(
       where: { lead_id: { _eq: $leadId }, activity_type_id: { _eq: 4 } }
@@ -263,19 +271,22 @@ const ADD_LEAD_NOTE_MUTATION = `
 
 function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead {
   const lead = data.crm_lead || data;
-  const assignedToName = lead.seller_manager_name ?? (lead.seller_manager
-    ? `${lead.seller_manager.first_name ?? ""} ${lead.seller_manager.last_name ?? ""}`.trim()
-    : null);
+  const seller = lead.crm_seller;
+  const assignedToName = lead.seller_manager_name ?? null;
 
-return {
+  const fullName = seller
+    ? `${seller.first_name ?? ""} ${seller.last_name ?? ""}`.trim()
+    : "";
+
+  return {
     id: lead.id,
-    name: lead.full_name ?? "",
-    email: lead.email,
-    phone: lead.phone,
-    address: lead.address,
-    city: lead.city,
-    state: lead.state,
-    zipCode: lead.zip_code,
+    name: fullName,
+    email: seller?.email ?? null,
+    phone: seller?.phone ?? null,
+    address: seller?.address ?? null,
+    city: seller?.city ?? null,
+    state: seller?.state ?? null,
+    zipCode: seller?.zip_code ?? null,
     leadTeamRating: lead.lead_team_rating?.toUpperCase() as LeadTeamRating | null,
     stageId: lead.stage_id,
     stageName: lead.lead_status,

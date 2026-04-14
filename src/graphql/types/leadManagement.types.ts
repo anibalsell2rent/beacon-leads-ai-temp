@@ -64,6 +64,7 @@ export const leadManagementTypeDefs = gql`
     userId: Int!
     email: String!
     name: String!
+    slug: String!
     initials: String!
     goalId: String
     goalName: String

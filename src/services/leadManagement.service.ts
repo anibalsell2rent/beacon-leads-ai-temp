@@ -70,6 +70,7 @@ interface ManagerGoals {
   userId: number;
   email: string;
   name: string;
+  slug: string;
   initials: string;
   goalId: string | null;
   goalName: string | null;
@@ -215,7 +216,7 @@ const LEAD_BY_ID_QUERY = `
 const MANAGER_INFO_QUERY = `
   query GetManagerInfo($managerId: Int!) {
     users_by_pk(id: $managerId) {
-      id email first_name last_name initials
+      id email first_name last_name initials slug
     }
   }
 `;
@@ -372,6 +373,7 @@ export class LeadManagementService {
       userId: manager.id,
       email: manager.email ?? "",
       name: `${manager.first_name ?? ""} ${manager.last_name ?? ""}`.trim(),
+      slug: manager.slug ?? "",
       initials: manager.initials ?? "",
       goalId: goal?.id ?? null,
       goalName: goal?.Name ?? null,

@@ -109,7 +109,7 @@ const MANAGER_LEADS_QUERY = `
       lead_id tab added_at tracking_date
       crm_lead {
         id lead_team_rating stage_id lead_status date_created updated_at
-        lead_score s2r_net_revenue seller_segment marketing_source
+        lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone address city state zip_code }
@@ -122,7 +122,7 @@ const MANAGER_LEADS_QUERY = `
       lead_id tab added_at tracking_date
       crm_lead {
         id lead_team_rating stage_id lead_status date_created updated_at
-        lead_score s2r_net_revenue seller_segment marketing_source
+        lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone address city state zip_code }
@@ -135,7 +135,7 @@ const MANAGER_LEADS_QUERY = `
       lead_id tab added_at tracking_date
       crm_lead {
         id lead_team_rating stage_id lead_status date_created updated_at
-        lead_score s2r_net_revenue seller_segment marketing_source
+        lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone address city state zip_code }
@@ -148,7 +148,7 @@ const MANAGER_LEADS_QUERY = `
       lead_id tab added_at tracking_date
       crm_lead {
         id lead_team_rating stage_id lead_status date_created updated_at
-        lead_score s2r_net_revenue seller_segment marketing_source
+        lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone address city state zip_code }
@@ -208,7 +208,7 @@ const LEAD_BY_ID_QUERY = `
   query GetLeadById($leadId: uuid!) {
     crm_leads_by_pk(id: $leadId) {
       id lead_team_rating stage_id lead_status date_created updated_at
-      lead_score s2r_net_revenue seller_segment marketing_source
+      lead_final_score s2r_net_revenue seller_segment marketing_source
       seller_manager_id
       crm_seller {
         first_name last_name email phone address city state zip_code
@@ -317,7 +317,7 @@ function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead 
     stageName: lead.lead_status,
     assignedTo: lead.seller_manager_id,
     assignedToName,
-    leadScore: lead.lead_score,
+    leadScore: lead.lead_final_score,
     s2rNetRevenue: lead.s2r_net_revenue,
     sellerSegment: lead.seller_segment,
     marketingSource: lead.marketing_source,

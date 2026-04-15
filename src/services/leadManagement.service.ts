@@ -209,10 +209,11 @@ const SEARCH_LEADS_QUERY = `
 `;
 
 const SEARCH_SELLERS_FOR_TAB_QUERY = `
-  query SearchSellersForTab($query: String!, $firstName: String!, $lastName: String!, $limit: Int!, $excludeLeadIds: [uuid!]!) {
+  query SearchSellersForTab($query: String!, $firstName: String!, $lastName: String!, $limit: Int!, $excludeLeadIds: [uuid!]!, $managerId: Int!) {
     crm_leads(
       where: {
         id: { _nin: $excludeLeadIds }
+        seller_manager_id: { _eq: $managerId }
         _or: [
           { crm_seller: { first_name: { _ilike: $query } } }
           { crm_seller: { last_name: { _ilike: $query } } }
@@ -224,7 +225,7 @@ const SEARCH_SELLERS_FOR_TAB_QUERY = `
       limit: $limit
       order_by: { date_created: desc }
     ) {
-      id lead_team_rating stage_id date_created updated_at
+      id zoho_lead_id lead_team_rating stage_id date_created updated_at
       lead_final_score s2r_net_revenue seller_segment marketing_source
       seller_manager_id
       seller_manager { id first_name last_name }
@@ -600,12 +601,13 @@ static async searchSellersForTab(
     });
     const excludeLeadIds = (existingData.manager_lead_tracking ?? []).map((t: any) => t.lead_id);
 
-    // Search for leads excluding those already in the tab
+    // Search for leads excluding those already in the tab, filtered by seller_manager_id
     const data = await hasuraQuery<any>(SEARCH_SELLERS_FOR_TAB_QUERY, {
       query: searchPattern,
       firstName,
       lastName,
       limit,
+      managerId,
       excludeLeadIds: excludeLeadIds.length > 0 ? excludeLeadIds : ["00000000-0000-0000-0000-000000000000"],
     });
 

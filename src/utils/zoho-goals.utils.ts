@@ -1,5 +1,7 @@
 import axios from "axios";
 import {
+  startOfDay,
+  endOfDay,
   startOfWeek,
   endOfWeek,
   startOfMonth,
@@ -74,6 +76,8 @@ export async function fetchZohoToken(): Promise<string | null> {
 export function getDateRange(timeframe: Timeframe): DateRange {
   const now = new Date();
   switch (timeframe) {
+    case "TODAY":
+      return { start: startOfDay(now), end: endOfDay(now) };
     case "THIS_WEEK":
       return { start: startOfWeek(now), end: endOfWeek(now) };
     case "THIS_MONTH":

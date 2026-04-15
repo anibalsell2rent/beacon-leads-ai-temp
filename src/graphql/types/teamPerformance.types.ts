@@ -2,6 +2,7 @@ import { gql } from "apollo-server-express";
 
 export const teamPerformanceTypeDefs = gql`
   enum Timeframe {
+    TODAY
     THIS_WEEK
     THIS_MONTH
     THIS_QUARTER

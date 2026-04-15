@@ -106,6 +106,12 @@ export const leadManagementTypeDefs = gql`
       trackingDate: String
       limit: Int = 20
     ): [Lead!]!
+
+    getLeadsByManager(
+      managerId: Int!
+      limit: Int = 50
+      offset: Int = 0
+    ): [Lead!]!
   }
 
   extend type Mutation {

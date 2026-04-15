@@ -245,6 +245,24 @@ const LEADS_IN_TAB_QUERY = `
   }
 `;
 
+const GET_LEADS_BY_MANAGER_QUERY = `
+  query GetLeadsByManager($managerId: Int!, $limit: Int!, $offset: Int!) {
+    crm_leads(
+      where: { seller_manager_id: { _eq: $managerId } }
+      limit: $limit
+      offset: $offset
+      order_by: { date_created: desc }
+    ) {
+      id zoho_lead_id lead_team_rating stage_id date_created updated_at
+      lead_final_score s2r_net_revenue seller_segment marketing_source
+      seller_manager_id
+      seller_manager { id first_name last_name }
+      crm_seller { first_name last_name email phone }
+      property { address city state zip_code }
+    }
+  }
+`;
+
 const LEAD_BY_ID_QUERY = `
   query GetLeadById($leadId: uuid!) {
     crm_leads_by_pk(id: $leadId) {
@@ -611,6 +629,11 @@ static async searchSellersForTab(
       excludeLeadIds: excludeLeadIds.length > 0 ? excludeLeadIds : ["00000000-0000-0000-0000-000000000000"],
     });
 
+    return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
+  }
+
+  static async getLeadsByManager(managerId: number, limit = 50, offset = 0): Promise<Lead[]> {
+    const data = await hasuraQuery<any>(GET_LEADS_BY_MANAGER_QUERY, { managerId, limit, offset });
     return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
   }
 

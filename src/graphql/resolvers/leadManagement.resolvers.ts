@@ -62,6 +62,18 @@ export const leadManagementResolvers = {
         throw new Error(`Failed to search sellers for tab: ${error.message}`);
       }
     },
+
+    getLeadsByManager: async (
+      _: any,
+      { managerId, limit = 50, offset = 0 }: { managerId: number; limit?: number; offset?: number }
+    ) => {
+      try {
+        return await LeadManagementService.getLeadsByManager(managerId, limit, offset);
+      } catch (error: any) {
+        console.error("[LeadManagement] Error getLeadsByManager:", error);
+        throw new Error(`Failed to get leads by manager: ${error.message}`);
+      }
+    },
   },
 
   Mutation: {

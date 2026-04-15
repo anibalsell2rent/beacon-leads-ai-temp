@@ -50,6 +50,18 @@ export const leadManagementResolvers = {
         throw new Error(`Failed to search leads: ${error.message}`);
       }
     },
+
+    searchSellersForTab: async (
+      _: any,
+      { query, tab, managerId, trackingDate, limit = 20 }: { query: string; tab: LeadTab; managerId: number; trackingDate?: string; limit?: number }
+    ) => {
+      try {
+        return await LeadManagementService.searchSellersForTab(query, tab, managerId, trackingDate, limit);
+      } catch (error: any) {
+        console.error("[LeadManagement] Error searchSellersForTab:", error);
+        throw new Error(`Failed to search sellers for tab: ${error.message}`);
+      }
+    },
   },
 
   Mutation: {

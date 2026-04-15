@@ -208,6 +208,43 @@ const SEARCH_LEADS_QUERY = `
   }
 `;
 
+const SEARCH_SELLERS_FOR_TAB_QUERY = `
+  query SearchSellersForTab($query: String!, $limit: Int!, $excludeLeadIds: [uuid!]!) {
+    crm_leads(
+      where: {
+        id: { _nin: $excludeLeadIds }
+        crm_seller: {
+          _or: [
+            { first_name: { _ilike: $query } }
+            { last_name: { _ilike: $query } }
+            { email: { _ilike: $query } }
+            { phone: { _ilike: $query } }
+          ]
+        }
+      }
+      limit: $limit
+      order_by: { date_created: desc }
+    ) {
+      id lead_team_rating stage_id date_created updated_at
+      lead_final_score s2r_net_revenue seller_segment marketing_source
+      seller_manager_id
+      seller_manager { id first_name last_name }
+      crm_seller { first_name last_name email phone }
+      property { address city state zip_code }
+    }
+  }
+`;
+
+const LEADS_IN_TAB_QUERY = `
+  query GetLeadsInTab($managerId: Int!, $tab: String!, $trackingDate: date!) {
+    manager_lead_tracking(
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: $tab }, tracking_date: { _eq: $trackingDate } }
+    ) {
+      lead_id
+    }
+  }
+`;
+
 const LEAD_BY_ID_QUERY = `
   query GetLeadById($leadId: uuid!) {
     crm_leads_by_pk(id: $leadId) {
@@ -483,6 +520,34 @@ export class LeadManagementService {
     const data = await hasuraQuery<any>(SEARCH_LEADS_QUERY, {
       query: searchPattern,
       limit,
+    });
+
+    return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
+  }
+
+  static async searchSellersForTab(
+    query: string,
+    tab: LeadTab,
+    managerId: number,
+    trackingDate?: string,
+    limit = 20
+  ): Promise<Lead[]> {
+    const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
+    const searchPattern = `%${query}%`;
+
+    // Get leads already in this tab for this manager/date
+    const existingData = await hasuraQuery<any>(LEADS_IN_TAB_QUERY, {
+      managerId,
+      tab,
+      trackingDate: dateToUse,
+    });
+    const excludeLeadIds = (existingData.manager_lead_tracking ?? []).map((t: any) => t.lead_id);
+
+    // Search for leads excluding those already in the tab
+    const data = await hasuraQuery<any>(SEARCH_SELLERS_FOR_TAB_QUERY, {
+      query: searchPattern,
+      limit,
+      excludeLeadIds: excludeLeadIds.length > 0 ? excludeLeadIds : ["00000000-0000-0000-0000-000000000000"],
     });
 
     return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));

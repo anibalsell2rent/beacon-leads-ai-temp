@@ -98,6 +98,14 @@ export const leadManagementTypeDefs = gql`
       query: String!
       limit: Int = 20
     ): [Lead!]!
+
+    searchSellersForTab(
+      query: String!
+      tab: LeadTab!
+      managerId: Int!
+      trackingDate: String
+      limit: Int = 20
+    ): [Lead!]!
   }
 
   extend type Mutation {

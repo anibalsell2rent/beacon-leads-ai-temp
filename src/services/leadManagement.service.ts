@@ -600,6 +600,12 @@ static async searchSellersForTab(
   ): Promise<Lead> {
     const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
     await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab, trackingDate: dateToUse });
+
+    // Update is_hot when adding to HOT_LEAD tab
+    if (tab === "HOT_LEAD") {
+      await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot: true });
+    }
+
     return this.getLeadById(leadId, managerId, dateToUse);
   }
 
@@ -616,7 +622,14 @@ static async searchSellersForTab(
       tab,
       trackingDate: dateToUse,
     });
-    return (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
+    const removed = (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
+
+    // Update is_hot when removing from HOT_LEAD tab
+    if (removed && tab === "HOT_LEAD") {
+      await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot: false });
+    }
+
+    return removed;
   }
 
   static async updateLeadRating(

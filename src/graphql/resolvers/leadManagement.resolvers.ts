@@ -27,15 +27,15 @@ export const leadManagementResolvers = {
       }
     },
 
-    getManagerLeads: async (
+    getPriorityPanelLeads: async (
       _: any,
       { managerId, trackingDate }: { managerId: number; trackingDate?: string }
     ) => {
       try {
         return await LeadManagementService.getManagerLeads(managerId, trackingDate);
       } catch (error: any) {
-        console.error("[LeadManagement] Error getManagerLeads:", error);
-        throw new Error(`Failed to fetch manager leads: ${error.message}`);
+        console.error("[LeadManagement] Error getPriorityPanelLeads:", error);
+        throw new Error(`Failed to fetch priority panel leads: ${error.message}`);
       }
     },
 

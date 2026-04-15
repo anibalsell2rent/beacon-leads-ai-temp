@@ -92,7 +92,7 @@ export const leadManagementTypeDefs = gql`
       timeframe: Timeframe!
     ): ManagerGoals
 
-    getManagerLeads(managerId: Int!, trackingDate: String): ManagerLeadsResponse!
+    getPriorityPanelLeads(managerId: Int!, trackingDate: String): ManagerLeadsResponse!
 
     searchLeads(
       query: String!

@@ -247,22 +247,27 @@ const LEADS_IN_TAB_QUERY = `
 const LEAD_BY_ID_QUERY = `
   query GetLeadById($leadId: uuid!) {
     crm_leads_by_pk(id: $leadId) {
-      id lead_team_rating stage_id date_created updated_at
+      id zoho_lead_id lead_team_rating stage_id date_created updated_at
       lead_final_score s2r_net_revenue seller_segment marketing_source
       seller_manager_id
       seller_manager { id first_name last_name }
       crm_seller { first_name last_name email phone }
       property { address city state zip_code }
     }
+    manager_lead_tracking(where: { lead_id: { _eq: $leadId } }) {
+      tab
+    }
+  }
+`;
+
+const LEAD_ACTIVITIES_BY_ZOHO_ID_QUERY = `
+  query GetLeadActivities($zohoLeadId: String!) {
     crm_activities(
-      where: { lead_id: { _eq: $leadId }, activity_type_id: { _eq: 4 } }
+      where: { lead_id: { _eq: $zohoLeadId }, activity_type_id: { _eq: 4 } }
       order_by: { created_at: desc }
     ) {
       id notes created_at created_by
       user { first_name last_name }
-    }
-    manager_lead_tracking(where: { lead_id: { _eq: $leadId } }) {
-      tab
     }
   }
 `;
@@ -616,10 +621,17 @@ static async searchSellersForTab(
 
   private static async getLeadById(leadId: string, managerId?: number, trackingDate?: string): Promise<Lead> {
     const data = await hasuraQuery<any>(LEAD_BY_ID_QUERY, { leadId });
-
     const lead = data.crm_leads_by_pk;
-    const notes = (data.crm_activities ?? []).map(parseNote);
     const tabs = (data.manager_lead_tracking ?? []).map((t: any) => t.tab as LeadTab);
+
+    // Fetch activities using zoho_lead_id (text) since crm_activities.lead_id is text
+    let notes: LeadNote[] = [];
+    if (lead?.zoho_lead_id) {
+      const activitiesData = await hasuraQuery<any>(LEAD_ACTIVITIES_BY_ZOHO_ID_QUERY, { 
+        zohoLeadId: lead.zoho_lead_id 
+      });
+      notes = (activitiesData.crm_activities ?? []).map(parseNote);
+    }
 
     return mapLead(lead, tabs, notes);
   }

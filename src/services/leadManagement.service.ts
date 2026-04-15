@@ -209,18 +209,17 @@ const SEARCH_LEADS_QUERY = `
 `;
 
 const SEARCH_SELLERS_FOR_TAB_QUERY = `
-  query SearchSellersForTab($query: String!, $limit: Int!, $excludeLeadIds: [uuid!]!) {
+  query SearchSellersForTab($query: String!, $firstName: String!, $lastName: String!, $limit: Int!, $excludeLeadIds: [uuid!]!) {
     crm_leads(
       where: {
         id: { _nin: $excludeLeadIds }
-        crm_seller: {
-          _or: [
-            { first_name: { _ilike: $query } }
-            { last_name: { _ilike: $query } }
-            { email: { _ilike: $query } }
-            { phone: { _ilike: $query } }
-          ]
-        }
+        _or: [
+          { crm_seller: { first_name: { _ilike: $query } } }
+          { crm_seller: { last_name: { _ilike: $query } } }
+          { crm_seller: { email: { _ilike: $query } } }
+          { crm_seller: { phone: { _ilike: $query } } }
+          { crm_seller: { _and: [{ first_name: { _ilike: $firstName } }, { last_name: { _ilike: $lastName } }] } }
+        ]
       }
       limit: $limit
       order_by: { date_created: desc }
@@ -251,9 +250,9 @@ const LEAD_BY_ID_QUERY = `
       id lead_team_rating stage_id date_created updated_at
       lead_final_score s2r_net_revenue seller_segment marketing_source
       seller_manager_id
-      crm_seller {
-        first_name last_name email phone address city state zip_code
-      }
+      seller_manager { id first_name last_name }
+      crm_seller { first_name last_name email phone }
+      property { address city state zip_code }
     }
     crm_activities(
       where: { lead_id: { _eq: $leadId }, activity_type_id: { _eq: 4 } }
@@ -525,7 +524,7 @@ export class LeadManagementService {
     return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
   }
 
-  static async searchSellersForTab(
+static async searchSellersForTab(
     query: string,
     tab: LeadTab,
     managerId: number,
@@ -534,6 +533,11 @@ export class LeadManagementService {
   ): Promise<Lead[]> {
     const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
     const searchPattern = `%${query}%`;
+
+    // Parse query for full name search (e.g., "John Doe" -> firstName: "John", lastName: "Doe")
+    const parts = query.trim().split(/\s+/);
+    const firstName = parts.length > 1 ? `%${parts[0]}%` : `%${query}%`;
+    const lastName = parts.length > 1 ? `%${parts.slice(1).join(" ")}%` : `%${query}%`;
 
     // Get leads already in this tab for this manager/date
     const existingData = await hasuraQuery<any>(LEADS_IN_TAB_QUERY, {
@@ -546,6 +550,8 @@ export class LeadManagementService {
     // Search for leads excluding those already in the tab
     const data = await hasuraQuery<any>(SEARCH_SELLERS_FOR_TAB_QUERY, {
       query: searchPattern,
+      firstName,
+      lastName,
       limit,
       excludeLeadIds: excludeLeadIds.length > 0 ? excludeLeadIds : ["00000000-0000-0000-0000-000000000000"],
     });

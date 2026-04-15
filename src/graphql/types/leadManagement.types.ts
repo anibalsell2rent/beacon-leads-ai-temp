@@ -128,6 +128,11 @@ export const leadManagementTypeDefs = gql`
       rating: LeadTeamRating
     ): Lead!
 
+    updateLeadIsHot(
+      leadId: String!
+      isHot: Boolean!
+    ): Lead!
+
     addLeadNote(
       leadId: String!
       content: String!

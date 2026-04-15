@@ -139,5 +139,14 @@ export const leadManagementTypeDefs = gql`
       createdBy: Int!
       trackingDate: String
     ): LeadNote!
+
+    updateTrackingNote(
+      noteId: Int!
+      content: String!
+    ): LeadNote!
+
+    deleteTrackingNote(
+      noteId: Int!
+    ): Boolean!
   }
 `;

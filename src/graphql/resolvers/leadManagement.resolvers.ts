@@ -124,5 +124,29 @@ export const leadManagementResolvers = {
         throw new Error(`Failed to add lead note: ${error.message}`);
       }
     },
+
+    updateTrackingNote: async (
+      _: any,
+      { noteId, content }: { noteId: number; content: string }
+    ) => {
+      try {
+        return await LeadManagementService.updateTrackingNote(noteId, content);
+      } catch (error: any) {
+        console.error("[LeadManagement] Error updateTrackingNote:", error);
+        throw new Error(`Failed to update tracking note: ${error.message}`);
+      }
+    },
+
+    deleteTrackingNote: async (
+      _: any,
+      { noteId }: { noteId: number }
+    ) => {
+      try {
+        return await LeadManagementService.deleteTrackingNote(noteId);
+      } catch (error: any) {
+        console.error("[LeadManagement] Error deleteTrackingNote:", error);
+        throw new Error(`Failed to delete tracking note: ${error.message}`);
+      }
+    },
   },
 };

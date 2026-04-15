@@ -346,6 +346,26 @@ const ADD_LEAD_NOTE_MUTATION = `
   }
 `;
 
+const UPDATE_TRACKING_NOTE_MUTATION = `
+  mutation UpdateTrackingNote($noteId: Int!, $notes: jsonb!) {
+    update_crm_activities_by_pk(
+      pk_columns: { id: $noteId }
+      _set: { notes: $notes }
+    ) {
+      id notes created_at created_by
+      user { first_name last_name }
+    }
+  }
+`;
+
+const DELETE_TRACKING_NOTE_MUTATION = `
+  mutation DeleteTrackingNote($noteId: Int!) {
+    delete_crm_activities_by_pk(id: $noteId) {
+      id
+    }
+  }
+`;
+
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead {
@@ -676,6 +696,27 @@ static async searchSellersForTab(
     });
 
     return parseNote(data.insert_crm_activities_one);
+  }
+
+  static async updateTrackingNote(noteId: number, content: string): Promise<LeadNote> {
+    const timestamp = new Date().toISOString();
+    const notes = { content, timestamp };
+
+    const data = await hasuraQuery<any>(UPDATE_TRACKING_NOTE_MUTATION, {
+      noteId,
+      notes,
+    });
+
+    if (!data.update_crm_activities_by_pk) {
+      throw new Error("Note not found");
+    }
+
+    return parseNote(data.update_crm_activities_by_pk);
+  }
+
+  static async deleteTrackingNote(noteId: number): Promise<boolean> {
+    const data = await hasuraQuery<any>(DELETE_TRACKING_NOTE_MUTATION, { noteId });
+    return !!data.delete_crm_activities_by_pk;
   }
 
   private static async getLeadById(leadId: string, managerId?: number, trackingDate?: string): Promise<Lead> {

@@ -108,7 +108,7 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id lead_team_rating stage_id date_created updated_at
+        id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
@@ -122,7 +122,7 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id lead_team_rating stage_id date_created updated_at
+        id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
@@ -136,7 +136,7 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id lead_team_rating stage_id date_created updated_at
+        id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
@@ -150,7 +150,7 @@ const MANAGER_LEADS_QUERY = `
     ) {
       lead_id tab added_at tracking_date
       crm_lead {
-        id lead_team_rating stage_id date_created updated_at
+        id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
@@ -162,9 +162,9 @@ const MANAGER_LEADS_QUERY = `
 `;
 
 const LEAD_NOTES_QUERY = `
-  query GetLeadNotes($leadIds: [uuid!]!) {
+  query GetLeadNotes($zohoLeadIds: [String!]!) {
     crm_activities(
-      where: { lead_id: { _in: $leadIds }, activity_type_id: { _eq: 4 } }
+      where: { lead_id: { _in: $zohoLeadIds }, activity_type_id: { _eq: 4 } }
       order_by: { created_at: desc }
     ) {
       id lead_id notes created_at created_by
@@ -471,32 +471,48 @@ export class LeadManagementService {
     const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
     const data = await hasuraQuery<any>(MANAGER_LEADS_QUERY, { managerId, trackingDate: dateToUse });
 
-    const allLeadIds = [
+    const allItems = [
       ...(data.hotLeads ?? []),
       ...(data.liveOffers ?? []),
       ...(data.pipelineFollowUps ?? []),
       ...(data.newLeads ?? []),
-    ].map((item: any) => item.crm_lead?.id).filter(Boolean);
+    ];
 
-    const uniqueLeadIds = [...new Set(allLeadIds)];
+    // Get unique lead IDs (uuid) for tabs query
+    const uniqueLeadIds = [...new Set(allItems.map((item: any) => item.crm_lead?.id).filter(Boolean))];
 
-    // Fetch notes and tabs for all leads
-    const [notesData, tabsData] = await Promise.all([
-      uniqueLeadIds.length > 0
-        ? hasuraQuery<any>(LEAD_NOTES_QUERY, { leadIds: uniqueLeadIds })
-        : { crm_activities: [] },
-      hasuraQuery<any>(LEAD_TABS_QUERY, { leadIds: uniqueLeadIds, managerId, trackingDate: dateToUse }),
-    ]);
+    // Get unique zoho_lead_ids (text) for notes query
+    const uniqueZohoLeadIds = [...new Set(allItems.map((item: any) => item.crm_lead?.zoho_lead_id).filter(Boolean))];
 
-    // Group notes by lead_id
-    const notesByLead = new Map<string, LeadNote[]>();
-    for (const activity of notesData.crm_activities ?? []) {
-      const leadId = activity.lead_id;
-      if (!notesByLead.has(leadId)) notesByLead.set(leadId, []);
-      notesByLead.get(leadId)!.push(parseNote(activity));
+    // Create mapping from zoho_lead_id to lead id
+    const zohoToLeadIdMap = new Map<string, string>();
+    for (const item of allItems) {
+      if (item.crm_lead?.zoho_lead_id && item.crm_lead?.id) {
+        zohoToLeadIdMap.set(item.crm_lead.zoho_lead_id, item.crm_lead.id);
+      }
     }
 
-    // Group tabs by lead_id
+    // Fetch notes (using zoho_lead_ids) and tabs (using lead ids) in parallel
+    const [notesData, tabsData] = await Promise.all([
+      uniqueZohoLeadIds.length > 0
+        ? hasuraQuery<any>(LEAD_NOTES_QUERY, { zohoLeadIds: uniqueZohoLeadIds })
+        : { crm_activities: [] },
+      uniqueLeadIds.length > 0
+        ? hasuraQuery<any>(LEAD_TABS_QUERY, { leadIds: uniqueLeadIds, managerId, trackingDate: dateToUse })
+        : { manager_lead_tracking: [] },
+    ]);
+
+    // Group notes by lead_id (uuid) - convert from zoho_lead_id
+    const notesByLead = new Map<string, LeadNote[]>();
+    for (const activity of notesData.crm_activities ?? []) {
+      const leadId = zohoToLeadIdMap.get(activity.lead_id);
+      if (leadId) {
+        if (!notesByLead.has(leadId)) notesByLead.set(leadId, []);
+        notesByLead.get(leadId)!.push(parseNote(activity));
+      }
+    }
+
+    // Group tabs by lead_id (uuid)
     const tabsByLead = new Map<string, LeadTab[]>();
     for (const tracking of tabsData.manager_lead_tracking ?? []) {
       const leadId = tracking.lead_id;

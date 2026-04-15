@@ -162,9 +162,9 @@ const MANAGER_LEADS_QUERY = `
 `;
 
 const LEAD_NOTES_QUERY = `
-  query GetLeadNotes($zohoLeadIds: [String!]!) {
+  query GetLeadNotes($zohoLeadIds: [String!]!, $trackingDate: date!) {
     crm_activities(
-      where: { lead_id: { _in: $zohoLeadIds }, activity_type_id: { _eq: 4 } }
+      where: { lead_id: { _in: $zohoLeadIds }, activity_type_id: { _eq: 4 }, tracking_date: { _eq: $trackingDate } }
       order_by: { created_at: desc }
     ) {
       id lead_id notes created_at created_by
@@ -317,18 +317,30 @@ const UPDATE_LEAD_RATING_MUTATION = `
   }
 `;
 
+const UPDATE_LEAD_IS_HOT_MUTATION = `
+  mutation UpdateLeadIsHot($leadId: uuid!, $isHot: Boolean!) {
+    update_crm_leads_by_pk(
+      pk_columns: { id: $leadId }
+      _set: { is_hot: $isHot }
+    ) {
+      id is_hot
+    }
+  }
+`;
+
 const ADD_LEAD_NOTE_MUTATION = `
-  mutation AddLeadNote($leadId: uuid!, $notes: jsonb!, $createdBy: Int!) {
+  mutation AddLeadNote($zohoLeadId: String!, $notes: jsonb!, $createdBy: Int!, $trackingDate: date!) {
     insert_crm_activities_one(
       object: {
-        lead_id: $leadId
+        lead_id: $zohoLeadId
         activity_type_id: 4
         notes: $notes
         created_by: $createdBy
         seller_id: $createdBy
+        tracking_date: $trackingDate
       }
     ) {
-      id notes created_at created_by
+      id notes created_at created_by tracking_date
       user { first_name last_name }
     }
   }
@@ -492,10 +504,10 @@ export class LeadManagementService {
       }
     }
 
-    // Fetch notes (using zoho_lead_ids) and tabs (using lead ids) in parallel
+    // Fetch notes (using zoho_lead_ids + trackingDate) and tabs (using lead ids) in parallel
     const [notesData, tabsData] = await Promise.all([
       uniqueZohoLeadIds.length > 0
-        ? hasuraQuery<any>(LEAD_NOTES_QUERY, { zohoLeadIds: uniqueZohoLeadIds })
+        ? hasuraQuery<any>(LEAD_NOTES_QUERY, { zohoLeadIds: uniqueZohoLeadIds, trackingDate: dateToUse })
         : { crm_activities: [] },
       uniqueLeadIds.length > 0
         ? hasuraQuery<any>(LEAD_TABS_QUERY, { leadIds: uniqueLeadIds, managerId, trackingDate: dateToUse })
@@ -588,6 +600,12 @@ static async searchSellersForTab(
   ): Promise<Lead> {
     const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
     await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab, trackingDate: dateToUse });
+
+    // Update is_hot when adding to HOT_LEAD tab
+    if (tab === "HOT_LEAD") {
+      await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot: true });
+    }
+
     return this.getLeadById(leadId, managerId, dateToUse);
   }
 
@@ -604,7 +622,14 @@ static async searchSellersForTab(
       tab,
       trackingDate: dateToUse,
     });
-    return (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
+    const removed = (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
+
+    // Update is_hot when removing from HOT_LEAD tab
+    if (removed && tab === "HOT_LEAD") {
+      await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot: false });
+    }
+
+    return removed;
   }
 
   static async updateLeadRating(
@@ -621,15 +646,28 @@ static async searchSellersForTab(
   static async addLeadNote(
     leadId: string,
     content: string,
-    createdBy: number
+    createdBy: number,
+    trackingDate?: string
   ): Promise<LeadNote> {
+    const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
     const timestamp = new Date().toISOString();
     const notes = { content, timestamp };
 
+    // Get zoho_lead_id for crm_activities.lead_id (text field)
+    const leadData = await hasuraQuery<any>(
+      `query GetLeadZohoId($leadId: uuid!) { crm_leads_by_pk(id: $leadId) { zoho_lead_id } }`,
+      { leadId }
+    );
+    const zohoLeadId = leadData.crm_leads_by_pk?.zoho_lead_id;
+    if (!zohoLeadId) {
+      throw new Error("Lead not found or missing zoho_lead_id");
+    }
+
     const data = await hasuraQuery<any>(ADD_LEAD_NOTE_MUTATION, {
-      leadId,
+      zohoLeadId,
       notes,
       createdBy,
+      trackingDate: dateToUse,
     });
 
     return parseNote(data.insert_crm_activities_one);

@@ -103,10 +103,10 @@ export const leadManagementResolvers = {
 
     addLeadNote: async (
       _: any,
-      { leadId, content, createdBy }: { leadId: string; content: string; createdBy: number }
+      { leadId, content, createdBy, trackingDate }: { leadId: string; content: string; createdBy: number; trackingDate?: string }
     ) => {
       try {
-        return await LeadManagementService.addLeadNote(leadId, content, createdBy);
+        return await LeadManagementService.addLeadNote(leadId, content, createdBy, trackingDate);
       } catch (error: any) {
         console.error("[LeadManagement] Error addLeadNote:", error);
         throw new Error(`Failed to add lead note: ${error.message}`);

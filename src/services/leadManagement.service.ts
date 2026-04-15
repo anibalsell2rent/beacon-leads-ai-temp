@@ -369,12 +369,16 @@ export class LeadManagementService {
     const user = data.users?.[0];
     if (!user) return null;
 
+    const firstName = user.first_name ?? "";
+    const lastName = user.last_name ?? "";
+    const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+
     return {
       id: user.id,
       slug: user.slug ?? "",
-      name: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
+      name: `${firstName} ${lastName}`.trim(),
       email: user.email ?? "",
-      initials: user.initials ?? "",
+      initials,
       role: user.role ?? "",
     };
   }
@@ -397,12 +401,16 @@ export class LeadManagementService {
     const goalsByEmail = buildGoalsByEmail(filteredGoals);
     const goal = goalsByEmail.get(manager.email?.toLowerCase());
 
+    const firstName = manager.first_name ?? "";
+    const lastName = manager.last_name ?? "";
+    const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+
     return {
       userId: manager.id,
       email: manager.email ?? "",
-      name: `${manager.first_name ?? ""} ${manager.last_name ?? ""}`.trim(),
+      name: `${firstName} ${lastName}`.trim(),
       slug: manager.slug ?? "",
-      initials: manager.initials ?? "",
+      initials,
       goalId: goal?.id ?? null,
       goalName: goal?.Name ?? null,
       startingDate: goal?.Starting_Date ?? null,

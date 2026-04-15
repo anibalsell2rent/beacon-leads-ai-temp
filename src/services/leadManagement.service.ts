@@ -112,7 +112,8 @@ const MANAGER_LEADS_QUERY = `
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
-        crm_seller { first_name last_name email phone address city state zip_code }
+        crm_seller { first_name last_name email phone }
+        property { address city state zip_code }
       }
     }
     liveOffers: manager_lead_tracking(
@@ -125,7 +126,8 @@ const MANAGER_LEADS_QUERY = `
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
-        crm_seller { first_name last_name email phone address city state zip_code }
+        crm_seller { first_name last_name email phone }
+        property { address city state zip_code }
       }
     }
     pipelineFollowUps: manager_lead_tracking(
@@ -138,7 +140,8 @@ const MANAGER_LEADS_QUERY = `
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
-        crm_seller { first_name last_name email phone address city state zip_code }
+        crm_seller { first_name last_name email phone }
+        property { address city state zip_code }
       }
     }
     newLeads: manager_lead_tracking(
@@ -151,7 +154,8 @@ const MANAGER_LEADS_QUERY = `
         lead_final_score s2r_net_revenue seller_segment marketing_source
         seller_manager_id
         seller_manager { id first_name last_name }
-        crm_seller { first_name last_name email phone address city state zip_code }
+        crm_seller { first_name last_name email phone }
+        property { address city state zip_code }
       }
     }
   }
@@ -295,6 +299,7 @@ function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead 
   const lead = data.crm_lead || data;
   const seller = lead.crm_seller;
   const manager = lead.seller_manager;
+  const property = lead.property;
 
   const fullName = seller
     ? `${seller.first_name ?? ""} ${seller.last_name ?? ""}`.trim()
@@ -308,10 +313,10 @@ function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead 
     name: fullName,
     email: seller?.email ?? null,
     phone: seller?.phone ?? null,
-    address: seller?.address ?? null,
-    city: seller?.city ?? null,
-    state: seller?.state ?? null,
-    zipCode: seller?.zip_code ?? null,
+    address: property?.address ?? null,
+    city: property?.city ?? null,
+    state: property?.state ?? null,
+    zipCode: property?.zip_code ?? null,
     leadTeamRating: lead.lead_team_rating?.toUpperCase() as LeadTeamRating | null,
     stageId: lead.stage_id,
     stageName: null,

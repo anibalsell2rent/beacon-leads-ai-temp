@@ -95,7 +95,7 @@ export class PerformanceGoalsService {
 
     // Fetch actuals from Zoho COQL for all managers
     const managerEmails = sellerManagers.map((m) => m.email).filter(Boolean);
-    const { managerActuals, totalLeads } = await fetchAllManagersActualsFromZoho(managerEmails, range);
+    const { managerActuals, totalLeads, avgNetRevenue } = await fetchAllManagersActualsFromZoho(managerEmails, range);
 
     const managerGoals: SellerManagerGoals[] = [];
     const totals = {
@@ -142,7 +142,7 @@ export class PerformanceGoalsService {
       offersAccepted: createMetric(totals.offersAccepted, totals.targets.offersAccepted, totalLeads),
       psasExecuted: createMetric(totals.psasExecuted, totals.targets.psasExecuted, totalLeads),
       leadsConverted: createMetric(totals.leadsConverted, totals.targets.leadsConverted, totalLeads),
-      avgNetRevenue: createMetric(0, totals.targets.revenue),
+      avgNetRevenue: createMetric(avgNetRevenue, totals.targets.revenue),
       totalLeads: createMetric(totalLeads, TOTAL_LEADS_TARGET),
     };
 

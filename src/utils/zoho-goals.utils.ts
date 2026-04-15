@@ -277,9 +277,19 @@ export async function fetchTotalLeadsFromZoho(dateRange: DateRange): Promise<num
   return result[0]?.total ?? 0;
 }
 
+export async function fetchAvgNetRevenueFromZoho(dateRange: DateRange): Promise<number> {
+  const startDateTime = formatDateTimeISO(dateRange.start);
+  const endDateTime = formatDateTimeISO(new Date(dateRange.end.getFullYear(), dateRange.end.getMonth() + 1, 1));
+  
+  const query = `select AVG(Net_S2R_Revenue) as avg_revenue from Deals where (Created_Time >= '${startDateTime}' and Created_Time < '${endDateTime}')`;
+  const result = await executeCoqlQuery(query);
+  return result[0]?.avg_revenue ?? 0;
+}
+
 export interface AllManagersActualsResult {
   managerActuals: Map<string, ManagerActuals>;
   totalLeads: number;
+  avgNetRevenue: number;
 }
 
 // ─── Seller Managers Query ─────────────────────────────────────────────────────
@@ -311,7 +321,7 @@ export async function fetchAllManagersActualsFromZoho(
   ownerEmails: string[],
   dateRange: DateRange
 ): Promise<AllManagersActualsResult> {
-  const [managerResults, totalLeads] = await Promise.all([
+  const [managerResults, totalLeads, avgNetRevenue] = await Promise.all([
     Promise.all(
       ownerEmails.map(async (email) => ({
         email: email.toLowerCase(),
@@ -319,10 +329,12 @@ export async function fetchAllManagersActualsFromZoho(
       }))
     ),
     fetchTotalLeadsFromZoho(dateRange),
+    fetchAvgNetRevenueFromZoho(dateRange),
   ]);
 
   return {
     managerActuals: new Map(managerResults.map((r) => [r.email, r.actuals])),
     totalLeads,
+    avgNetRevenue,
   };
 }

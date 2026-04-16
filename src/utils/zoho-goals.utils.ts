@@ -300,12 +300,13 @@ export interface SellerManager {
   first_name: string | null;
   last_name: string | null;
   initials: string | null;
+  slug: string | null;
 }
 
 const SELLER_MANAGERS_QUERY = `
   query GetSellerManagers($roleId: uuid!) {
     users(where: { role_id: { _eq: $roleId }, is_active: { _eq: true } }) {
-      id email first_name last_name initials
+      id email first_name last_name initials slug
     }
   }
 `;

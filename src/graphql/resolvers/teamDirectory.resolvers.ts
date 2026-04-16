@@ -1,4 +1,5 @@
 import { TeamDirectoryService } from "../../services/teamDirectory.service";
+import { fetchSellerManagers } from "../../utils/zoho-goals.utils";
 
 export const teamDirectoryResolvers = {
   Query: {
@@ -54,9 +55,7 @@ export const teamDirectoryResolvers = {
 
     getSellerManagers: async () => {
       try {
-        // Seller Manager role UUID from roles table
-        const SELLER_MANAGER_ROLE_ID = "07ed4242-3905-4136-b225-4f9b3a613e9c";
-        return await TeamDirectoryService.getStaffByRoleId(SELLER_MANAGER_ROLE_ID);
+        return await fetchSellerManagers();
       } catch (error) {
         console.error("[GET SELLER MANAGERS ERROR]", error);
         throw new Error("Failed to fetch seller managers");

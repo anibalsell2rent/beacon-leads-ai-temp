@@ -9,6 +9,25 @@ import {
   fetchManagerActualsFromZoho,
 } from "../utils/zoho-goals.utils";
 
+// ─── Stage ID to Slug Map ──────────────────────────────────────────────────────
+
+const STAGE_SLUG_MAP: Record<number, string> = {
+  1: "new-lead",
+  2: "attempted-to-contact",
+  3: "initial-booking",
+  4: "underwriting",
+  5: "propose-to-seller",
+  6: "psa-execution",
+  7: "analyze-qualify",
+  8: "title-remediation",
+  9: "sales-icu",
+  10: "disqualified",
+  11: "referral",
+  12: "revisit-later",
+  13: "encouragement",
+  14: "unsubscribed",
+};
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 type LeadTab = "HOT_LEAD" | "LIVE_OFFER" | "PIPELINE_FOLLOW_UP" | "NEW_LEAD";
@@ -427,9 +446,9 @@ function mapLead(data: any, tabs: LeadTab[] = [], notes: LeadNote[] = []): Lead 
     city: property?.city ?? null,
     state: property?.state ?? null,
     zipCode: property?.zip_code ?? null,
-    leadTeamRating: lead.lead_team_rating?.toUpperCase() as LeadTeamRating | null,
-    stageId: lead.stage_id,
-    stageName: null,
+leadTeamRating: lead.lead_team_rating?.toUpperCase() as LeadTeamRating | null,
+  stageId: lead.stage_id,
+  stageName: lead.stage_id ? STAGE_SLUG_MAP[lead.stage_id] ?? null : null,
     assignedTo: lead.seller_manager_id,
     assignedToName,
     leadScore: lead.lead_final_score,

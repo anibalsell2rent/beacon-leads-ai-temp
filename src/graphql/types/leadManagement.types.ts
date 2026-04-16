@@ -111,6 +111,7 @@ export const leadManagementTypeDefs = gql`
       managerId: Int
       stageId: String
       limitPerStage: Int = 50
+      offsetPerStage: Int = 0
     ): [Lead!]!
   }
 

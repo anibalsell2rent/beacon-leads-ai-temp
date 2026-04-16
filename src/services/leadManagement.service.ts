@@ -265,10 +265,11 @@ const LEADS_IN_TAB_QUERY = `
 `;
 
 const GET_LEADS_BY_STAGE_QUERY = `
-  query GetLeadsByStage($stageId: uuid!, $limit: Int!) {
+  query GetLeadsByStage($stageId: uuid!, $limit: Int!, $offset: Int!) {
     crm_leads(
       where: { stage_id: { _eq: $stageId } }
       limit: $limit
+      offset: $offset
       order_by: { date_created: desc }
     ) {
       id zoho_lead_id lead_team_rating stage_id date_created updated_at
@@ -282,10 +283,11 @@ const GET_LEADS_BY_STAGE_QUERY = `
 `;
 
 const GET_LEADS_BY_MANAGER_AND_STAGE_QUERY = `
-  query GetLeadsByManagerAndStage($managerId: Int!, $stageId: uuid!, $limit: Int!) {
+  query GetLeadsByManagerAndStage($managerId: Int!, $stageId: uuid!, $limit: Int!, $offset: Int!) {
     crm_leads(
       where: { seller_manager_id: { _eq: $managerId }, stage_id: { _eq: $stageId } }
       limit: $limit
+      offset: $offset
       order_by: { date_created: desc }
     ) {
       id zoho_lead_id lead_team_rating stage_id date_created updated_at
@@ -667,16 +669,16 @@ static async searchSellersForTab(
     return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
   }
 
-  static async getLeads(managerId?: number, stageId?: string, limitPerStage = 50): Promise<Lead[]> {
+  static async getLeads(managerId?: number, stageId?: string, limitPerStage = 50, offsetPerStage = 0): Promise<Lead[]> {
     const stageIds = stageId ? [stageId] : Object.keys(STAGE_SLUG_MAP);
 
-    // Fetch leads for each stage in parallel with limit per stage
+    // Fetch leads for each stage in parallel with limit and offset per stage
     const results = await Promise.all(
       stageIds.map(async (sid) => {
         const query = managerId ? GET_LEADS_BY_MANAGER_AND_STAGE_QUERY : GET_LEADS_BY_STAGE_QUERY;
         const variables = managerId
-          ? { managerId, stageId: sid, limit: limitPerStage }
-          : { stageId: sid, limit: limitPerStage };
+          ? { managerId, stageId: sid, limit: limitPerStage, offset: offsetPerStage }
+          : { stageId: sid, limit: limitPerStage, offset: offsetPerStage };
         const data = await hasuraQuery<any>(query, variables);
         return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
       })

@@ -397,6 +397,17 @@ export class TeamDirectoryService {
 
   // ── Staff by role ID (filters by users.role_id) ─────────────────────────────
   static async getStaffByRoleId(roleId: string) {
+    // First get the role name
+    const roleData = await hasuraQuery<{
+      roles_by_pk: { name: string } | null;
+    }>(`
+      query GetRoleName($roleId: uuid!) {
+        roles_by_pk(id: $roleId) { name }
+      }
+    `, { roleId });
+    const roleName = roleData.roles_by_pk?.name ?? null;
+
+    // Get users with the specified role_id
     const data = await hasuraQuery<{
       users: {
         id: number;
@@ -411,14 +422,12 @@ export class TeamDirectoryService {
         hire_date: string | null;
         initials: string | null;
         slug: string | null;
-        role: { id: string; name: string } | null;
       }[];
     }>(`
       query UsersByRoleId($roleId: uuid!) {
         users(where: { role_id: { _eq: $roleId }, is_active: { _eq: true } }) {
           id email first_name last_name is_active department
           monthly_goal quarterly_goal yearly_goal hire_date initials slug
-          role { id name }
         }
       }
     `, { roleId });
@@ -437,8 +446,8 @@ export class TeamDirectoryService {
       monthly_goal: u.monthly_goal,
       quarterly_goal: u.quarterly_goal,
       yearly_goal: u.yearly_goal,
-      role_name: u.role?.name ?? null,
-      role_type: u.role?.name ?? null,
+      role_name: roleName,
+      role_type: roleName,
       active_leads_count: null,
       active_deals_count: null,
     }));

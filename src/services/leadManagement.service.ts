@@ -11,21 +11,21 @@ import {
 
 // ─── Stage ID to Slug Map ──────────────────────────────────────────────────────
 
-const STAGE_SLUG_MAP: Record<number, string> = {
-  1: "new-lead",
-  2: "attempted-to-contact",
-  3: "initial-booking",
-  4: "underwriting",
-  5: "propose-to-seller",
-  6: "psa-execution",
-  7: "analyze-qualify",
-  8: "title-remediation",
-  9: "sales-icu",
-  10: "disqualified",
-  11: "referral",
-  12: "revisit-later",
-  13: "encouragement",
-  14: "unsubscribed",
+const STAGE_SLUG_MAP: Record<string, string> = {
+  "6c4f7ca5-b767-4c7d-850f-27e2637efcc0": "analyze-qualify",
+  "ad6b4c54-e864-4ba5-88ca-5bea3c8fe4fa": "attempted-to-contact",
+  "2870c18a-3d3c-4298-add2-8ccfcf9ba6be": "disqualified",
+  "10831869-6cdb-4978-8377-cddb0860ac87": "encouragement",
+  "4b272beb-780b-4d1e-b646-403c86a5e3dd": "initial-booking",
+  "3b3d5f25-7a8a-41b6-a4ec-3ec3f5af6fbe": "title-remediation",
+  "be4b516c-b19f-421d-8d0a-4c30b6356f07": "new-lead",
+  "7de2f1b1-5d75-448f-9d93-60ccc6832cc3": "propose-to-seller",
+  "358e43dd-9d99-4972-951c-10f4e1a2ee6f": "psa-execution",
+  "397dae47-6fc9-4770-a5af-994f9d851f69": "referral",
+  "4e9a40d3-e270-4dba-ad79-fc6235f5c826": "revisit-later",
+  "332c2389-a797-46c0-90d6-1d8df31521db": "sales-icu",
+  "20c18604-1bef-4ff1-91df-5472b5b7011b": "underwriting",
+  "9b82698f-85ed-48f6-bd5c-580e7d967f3a": "unsubscribed",
 };
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -283,7 +283,7 @@ const GET_LEADS_BY_MANAGER_QUERY = `
 `;
 
 const GET_LEADS_BY_MANAGER_AND_STAGE_QUERY = `
-  query GetLeadsByManagerAndStage($managerId: Int!, $stageId: Int!, $limit: Int!, $offset: Int!) {
+  query GetLeadsByManagerAndStage($managerId: Int!, $stageId: uuid!, $limit: Int!, $offset: Int!) {
     crm_leads(
       where: { seller_manager_id: { _eq: $managerId }, stage_id: { _eq: $stageId } }
       limit: $limit
@@ -669,7 +669,7 @@ static async searchSellersForTab(
     return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
   }
 
-  static async getLeadsByManager(managerId: number, stageId?: number, limit = 50, offset = 0): Promise<Lead[]> {
+  static async getLeadsByManager(managerId: number, stageId?: string, limit = 50, offset = 0): Promise<Lead[]> {
     const query = stageId ? GET_LEADS_BY_MANAGER_AND_STAGE_QUERY : GET_LEADS_BY_MANAGER_QUERY;
     const variables = stageId 
       ? { managerId, stageId, limit, offset }

@@ -65,7 +65,7 @@ export const leadManagementResolvers = {
 
     getLeadsByManager: async (
       _: any,
-      { managerId, stageId, limit = 50, offset = 0 }: { managerId: number; stageId?: number; limit?: number; offset?: number }
+      { managerId, stageId, limit = 50, offset = 0 }: { managerId: number; stageId?: string; limit?: number; offset?: number }
     ) => {
       try {
         return await LeadManagementService.getLeadsByManager(managerId, stageId, limit, offset);

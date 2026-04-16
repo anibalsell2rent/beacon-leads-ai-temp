@@ -109,7 +109,7 @@ export const leadManagementTypeDefs = gql`
 
     getLeadsByManager(
       managerId: Int!
-      stageId: Int
+      stageId: String
       limit: Int = 50
       offset: Int = 0
     ): [Lead!]!

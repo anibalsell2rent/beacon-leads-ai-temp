@@ -54,7 +54,7 @@ export const teamDirectoryResolvers = {
 
     getSellerManagers: async () => {
       try {
-        return await TeamDirectoryService.getStaffByRoleKeyword("SELLER_MANAGER");
+        return await TeamDirectoryService.getStaffByRoleKeyword("Seller Manager");
       } catch (error) {
         console.error("[GET SELLER MANAGERS ERROR]", error);
         throw new Error("Failed to fetch seller managers");

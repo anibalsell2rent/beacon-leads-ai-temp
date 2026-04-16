@@ -7,6 +7,7 @@ export const teamDirectoryTypeDefs = gql`
     last_name: String
     email: String
     initials: String
+    slug: String
     department: String
     employee_code: String
     is_active: Boolean

@@ -63,15 +63,15 @@ export const leadManagementResolvers = {
       }
     },
 
-    getLeadsByManager: async (
+    getLeads: async (
       _: any,
-      { managerId, stageId, limit = 50, offset = 0 }: { managerId: number; stageId?: string; limit?: number; offset?: number }
+      { managerId, stageId, limitPerStage = 50 }: { managerId?: number; stageId?: string; limitPerStage?: number }
     ) => {
       try {
-        return await LeadManagementService.getLeadsByManager(managerId, stageId, limit, offset);
+        return await LeadManagementService.getLeads(managerId, stageId, limitPerStage);
       } catch (error: any) {
-        console.error("[LeadManagement] Error getLeadsByManager:", error);
-        throw new Error(`Failed to get leads by manager: ${error.message}`);
+        console.error("[LeadManagement] Error getLeads:", error);
+        throw new Error(`Failed to get leads: ${error.message}`);
       }
     },
   },

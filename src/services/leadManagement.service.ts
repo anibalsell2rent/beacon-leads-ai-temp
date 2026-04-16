@@ -264,12 +264,11 @@ const LEADS_IN_TAB_QUERY = `
   }
 `;
 
-const GET_LEADS_BY_MANAGER_QUERY = `
-  query GetLeadsByManager($managerId: Int!, $limit: Int!, $offset: Int!) {
+const GET_LEADS_BY_STAGE_QUERY = `
+  query GetLeadsByStage($stageId: uuid!, $limit: Int!) {
     crm_leads(
-      where: { seller_manager_id: { _eq: $managerId } }
+      where: { stage_id: { _eq: $stageId } }
       limit: $limit
-      offset: $offset
       order_by: { date_created: desc }
     ) {
       id zoho_lead_id lead_team_rating stage_id date_created updated_at
@@ -283,11 +282,10 @@ const GET_LEADS_BY_MANAGER_QUERY = `
 `;
 
 const GET_LEADS_BY_MANAGER_AND_STAGE_QUERY = `
-  query GetLeadsByManagerAndStage($managerId: Int!, $stageId: uuid!, $limit: Int!, $offset: Int!) {
+  query GetLeadsByManagerAndStage($managerId: Int!, $stageId: uuid!, $limit: Int!) {
     crm_leads(
       where: { seller_manager_id: { _eq: $managerId }, stage_id: { _eq: $stageId } }
       limit: $limit
-      offset: $offset
       order_by: { date_created: desc }
     ) {
       id zoho_lead_id lead_team_rating stage_id date_created updated_at
@@ -669,13 +667,25 @@ static async searchSellersForTab(
     return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
   }
 
-  static async getLeadsByManager(managerId: number, stageId?: string, limit = 50, offset = 0): Promise<Lead[]> {
-    const query = stageId ? GET_LEADS_BY_MANAGER_AND_STAGE_QUERY : GET_LEADS_BY_MANAGER_QUERY;
-    const variables = stageId 
-      ? { managerId, stageId, limit, offset }
-      : { managerId, limit, offset };
-    const data = await hasuraQuery<any>(query, variables);
-    return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
+  static async getLeads(managerId?: number, stageId?: string, limitPerStage = 50): Promise<Lead[]> {
+    const stageIds = stageId ? [stageId] : Object.keys(STAGE_SLUG_MAP);
+
+    // Fetch leads for each stage in parallel with limit per stage
+    const results = await Promise.all(
+      stageIds.map(async (sid) => {
+        const query = managerId ? GET_LEADS_BY_MANAGER_AND_STAGE_QUERY : GET_LEADS_BY_STAGE_QUERY;
+        const variables = managerId
+          ? { managerId, stageId: sid, limit: limitPerStage }
+          : { stageId: sid, limit: limitPerStage };
+        const data = await hasuraQuery<any>(query, variables);
+        return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
+      })
+    );
+
+    // Flatten results and sort by date_created desc
+    return results.flat().sort((a, b) => 
+      new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
+    );
   }
 
   static async addLeadToTab(

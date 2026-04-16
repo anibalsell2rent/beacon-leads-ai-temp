@@ -107,11 +107,10 @@ export const leadManagementTypeDefs = gql`
       limit: Int = 20
     ): [Lead!]!
 
-    getLeadsByManager(
-      managerId: Int!
+    getLeads(
+      managerId: Int
       stageId: String
-      limit: Int = 50
-      offset: Int = 0
+      limitPerStage: Int = 50
     ): [Lead!]!
   }
 

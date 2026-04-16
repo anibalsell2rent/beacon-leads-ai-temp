@@ -397,35 +397,51 @@ export class TeamDirectoryService {
 
   // ── Staff by role ID (filters by users.role_id) ─────────────────────────────
   static async getStaffByRoleId(roleId: string) {
-    const { rolesMap, usersMap } = await this.fetchLookups();
-
-    // Get user IDs that have the specified role_id
-    const usersData = await hasuraQuery<{
-      users: { id: number }[];
+    const data = await hasuraQuery<{
+      users: {
+        id: number;
+        email: string | null;
+        first_name: string | null;
+        last_name: string | null;
+        is_active: boolean | null;
+        department: string | null;
+        monthly_goal: number | null;
+        quarterly_goal: number | null;
+        yearly_goal: number | null;
+        hire_date: string | null;
+        initials: string | null;
+        slug: string | null;
+        role: { id: string; name: string } | null;
+      }[];
     }>(`
-      query UsersByRole($roleId: uuid!) {
-        users(where: { role_id: { _eq: $roleId } }) {
-          id
+      query UsersByRoleId($roleId: uuid!) {
+        users(where: { role_id: { _eq: $roleId }, is_active: { _eq: true } }) {
+          id email first_name last_name is_active department
+          monthly_goal quarterly_goal yearly_goal hire_date initials slug
+          role { id name }
         }
       }
     `, { roleId });
 
-    const userIds = usersData.users.map((u) => u.id);
-    if (userIds.length === 0) return [];
-
-    // Get employees that match those user IDs
-    const data = await hasuraQuery<{
-      crm_employees: Employee[];
-    }>(`
-      query EmployeesByUserIds($userIds: [Int!]!) {
-        crm_employees(where: { user_id: { _in: $userIds }, is_active: { _eq: true } }) {
-          id user_id initials department
-          employee_code is_active hire_date monthly_goal quarterly_goal yearly_goal role_id
-        }
-      }
-    `, { userIds });
-
-    return Promise.all(data.crm_employees.map((e) => buildStaffMember(e, rolesMap, usersMap)));
+    return data.users.map((u) => ({
+      id: u.id,
+      first_name: u.first_name,
+      last_name: u.last_name,
+      email: u.email,
+      initials: u.initials,
+      slug: u.slug,
+      department: u.department,
+      employee_code: null,
+      is_active: u.is_active,
+      hire_date: u.hire_date,
+      monthly_goal: u.monthly_goal,
+      quarterly_goal: u.quarterly_goal,
+      yearly_goal: u.yearly_goal,
+      role_name: u.role?.name ?? null,
+      role_type: u.role?.name ?? null,
+      active_leads_count: null,
+      active_deals_count: null,
+    }));
   }
 
   // ── Staff by role keyword ──────────────────────────────────────────────────

@@ -397,6 +397,8 @@ export class TeamDirectoryService {
 
   // ── Staff by role ID (filters by users.role_id) ─────────────────────────────
   static async getStaffByRoleId(roleId: string) {
+    console.log("[v0] getStaffByRoleId called with roleId:", roleId);
+    
     // First get the role name
     const roleData = await hasuraQuery<{
       roles_by_pk: { name: string } | null;
@@ -405,9 +407,10 @@ export class TeamDirectoryService {
         roles_by_pk(id: $roleId) { name }
       }
     `, { roleId });
+    console.log("[v0] roleData:", JSON.stringify(roleData));
     const roleName = roleData.roles_by_pk?.name ?? null;
 
-    // Get users with the specified role_id
+    // Get users with the specified role_id (is_active can be null, so check for != false)
     const data = await hasuraQuery<{
       users: {
         id: number;
@@ -431,6 +434,7 @@ export class TeamDirectoryService {
         }
       }
     `, { roleId });
+    console.log("[v0] users found:", data.users.length, JSON.stringify(data.users.slice(0, 2)));
 
     return data.users.map((u) => ({
       id: u.id,

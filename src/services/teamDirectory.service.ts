@@ -395,6 +395,39 @@ export class TeamDirectoryService {
     return buildStaffMember(emp, rolesMap, usersMap);
   }
 
+  // ── Staff by role ID (filters by users.role_id) ─────────────────────────────
+  static async getStaffByRoleId(roleId: string) {
+    const { rolesMap, usersMap } = await this.fetchLookups();
+
+    // Get user IDs that have the specified role_id
+    const usersData = await hasuraQuery<{
+      users: { id: number }[];
+    }>(`
+      query UsersByRole($roleId: uuid!) {
+        users(where: { role_id: { _eq: $roleId } }) {
+          id
+        }
+      }
+    `, { roleId });
+
+    const userIds = usersData.users.map((u) => u.id);
+    if (userIds.length === 0) return [];
+
+    // Get employees that match those user IDs
+    const data = await hasuraQuery<{
+      crm_employees: Employee[];
+    }>(`
+      query EmployeesByUserIds($userIds: [Int!]!) {
+        crm_employees(where: { user_id: { _in: $userIds }, is_active: { _eq: true } }) {
+          id user_id initials department
+          employee_code is_active hire_date monthly_goal quarterly_goal yearly_goal role_id
+        }
+      }
+    `, { userIds });
+
+    return Promise.all(data.crm_employees.map((e) => buildStaffMember(e, rolesMap, usersMap)));
+  }
+
   // ── Staff by role keyword ──────────────────────────────────────────────────
   static async getStaffByRoleKeyword(keyword: string) {
     const { rolesMap, usersMap } = await this.fetchLookups();

@@ -99,19 +99,16 @@ function formatDate(dateString: string): string {
 }
 
 function buildBreakdown(amazing: number, good: number, neutral: number, bad: number): string {
-  const parts: string[] = [];
-  if (amazing > 0) parts.push(`${amazing} Amazing`);
-  if (good > 0) parts.push(`${good} Good`);
-  if (neutral > 0) parts.push(`${neutral} Neutral`);
-  if (bad > 0) parts.push(`${bad} Bad`);
-  return parts.length > 0 ? ` (${parts.join(", ")})` : "";
+  return ` (${amazing} Amazing, ${good} Good, ${neutral} Neutral, ${bad} Bad)`;
+}
+
+function hasBreakdown(amazing: number, good: number, neutral: number, bad: number): boolean {
+  return amazing > 0 || good > 0 || neutral > 0 || bad > 0;
 }
 
 function buildCliqMessage(input: EodReportInput, userName: string): string {
   const emoji = input.winLoss === "WIN" ? "🟢 WIN" : "🔴 LOSS";
   const formattedDate = formatDate(input.reportDate);
-
-  const lines: string[] = [`${emoji} — ${userName} Recap ${formattedDate}:`];
 
   const psasSigned = input.psasSigned ?? 0;
   const offersAccepted = input.offersAccepted ?? 0;
@@ -133,30 +130,35 @@ function buildCliqMessage(input: EodReportInput, userName: string): string {
   const offersPresentedBad = input.offersPresentedBad ?? 0;
   const leadsConverted = input.leadsConverted ?? 0;
 
-  if (psasSigned > 0) {
-    lines.push(`PSAs SIGNED: ${psasSigned}`);
+  const lines: string[] = [`${emoji} — ${userName} Recap ${formattedDate}:`];
+
+  lines.push(`PSAs SIGNED: ${psasSigned}`);
+  lines.push(`OFFERS ACCEPTED: ${offersAccepted}`);
+  lines.push(`PSA Sent: ${psaSent}`);
+
+  // Follow Ups - show breakdown if any value > 0
+  if (hasBreakdown(followUpsAmazing, followUpsGood, followUpsNeutral, followUpsBad)) {
+    lines.push(`Follow Ups: (${followUpsTotal})${buildBreakdown(followUpsAmazing, followUpsGood, followUpsNeutral, followUpsBad)}`);
+  } else {
+    lines.push(`Follow Ups: (${followUpsTotal})`);
   }
-  if (offersAccepted > 0) {
-    lines.push(`OFFERS ACCEPTED: ${offersAccepted}`);
+
+  // Bookings Completed - show breakdown if any value > 0
+  if (hasBreakdown(bookingsAmazing, bookingsGood, bookingsNeutral, bookingsBad)) {
+    lines.push(`Bookings Completed: (${bookingsCompleted})${buildBreakdown(bookingsAmazing, bookingsGood, bookingsNeutral, bookingsBad)}`);
+  } else {
+    lines.push(`Bookings Completed: (${bookingsCompleted})`);
   }
-  if (psaSent > 0) {
-    lines.push(`PSA Sent: ${psaSent}`);
+
+  // Offers Presented - show breakdown if any value > 0
+  if (hasBreakdown(offersPresentedAmazing, offersPresentedGood, offersPresentedNeutral, offersPresentedBad)) {
+    lines.push(`Offers Presented: (${offersPresented})${buildBreakdown(offersPresentedAmazing, offersPresentedGood, offersPresentedNeutral, offersPresentedBad)}`);
+  } else {
+    lines.push(`Offers Presented: (${offersPresented})`);
   }
-  if (followUpsTotal > 0) {
-    const breakdown = buildBreakdown(followUpsAmazing, followUpsGood, followUpsNeutral, followUpsBad);
-    lines.push(`Follow Ups: (${followUpsTotal})${breakdown}`);
-  }
-  if (bookingsCompleted > 0) {
-    const breakdown = buildBreakdown(bookingsAmazing, bookingsGood, bookingsNeutral, bookingsBad);
-    lines.push(`Bookings Completed: (${bookingsCompleted})${breakdown}`);
-  }
-  if (offersPresented > 0) {
-    const breakdown = buildBreakdown(offersPresentedAmazing, offersPresentedGood, offersPresentedNeutral, offersPresentedBad);
-    lines.push(`Offers Presented: (${offersPresented})${breakdown}`);
-  }
-  if (leadsConverted > 0) {
-    lines.push(`Leads Converted: ${leadsConverted}`);
-  }
+
+  lines.push(`Leads Converted: ${leadsConverted}`);
+
   if (input.notes) {
     lines.push(`\n📝 ${input.notes}`);
   }

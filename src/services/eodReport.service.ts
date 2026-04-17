@@ -83,13 +83,37 @@ const GET_USER_NAME_QUERY = `
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function validateBreakdowns(input: EodReportInput): void {
-  const followUpsSum =
-    input.followUpsAmazing + input.followUpsGood + input.followUpsNeutral + input.followUpsBad;
+  // Only validate if breakdown values are provided
+  const hasFollowUpsBreakdown = 
+    input.followUpsAmazing !== undefined || input.followUpsGood !== undefined || 
+    input.followUpsNeutral !== undefined || input.followUpsBad !== undefined;
 
-  if (followUpsSum !== input.followUpsTotal) {
-    throw new Error(
-      `Follow ups breakdown (${followUpsSum}) does not match total (${input.followUpsTotal})`
-    );
+  if (hasFollowUpsBreakdown && input.followUpsTotal !== undefined) {
+    const followUpsSum =
+      (input.followUpsAmazing ?? 0) + (input.followUpsGood ?? 0) + 
+      (input.followUpsNeutral ?? 0) + (input.followUpsBad ?? 0);
+
+    if (followUpsSum !== input.followUpsTotal) {
+      throw new Error(
+        `Follow ups breakdown (${followUpsSum}) does not match total (${input.followUpsTotal})`
+      );
+    }
+  }
+
+  const hasOffersPresentedBreakdown = 
+    input.offersPresentedAmazing !== undefined || input.offersPresentedGood !== undefined || 
+    input.offersPresentedNeutral !== undefined || input.offersPresentedBad !== undefined;
+
+  if (hasOffersPresentedBreakdown && input.offersPresented !== undefined) {
+    const offersSum =
+      (input.offersPresentedAmazing ?? 0) + (input.offersPresentedGood ?? 0) + 
+      (input.offersPresentedNeutral ?? 0) + (input.offersPresentedBad ?? 0);
+
+    if (offersSum !== input.offersPresented) {
+      throw new Error(
+        `Offers presented breakdown (${offersSum}) does not match total (${input.offersPresented})`
+      );
+    }
   }
 }
 

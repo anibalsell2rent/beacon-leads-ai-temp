@@ -49,10 +49,10 @@ const INSERT_EOD_REPORT_MUTATION = `
 `;
 
 const UPDATE_EOD_REPORT_CLIQ_MUTATION = `
-  mutation UpdateEodReportCliq($id: uuid!, $cliqMessageId: String!, $sentAt: timestamptz!) {
+  mutation UpdateEodReportCliq($id: Int!, $cliqMessageId: String!, $sentAt: timestamptz!, $channelName: String!) {
     update_eod_reports_by_pk(
       pk_columns: { id: $id }
-      _set: { cliq_message_id: $cliqMessageId, sent_to_cliq_at: $sentAt }
+      _set: { cliq_message_id: $cliqMessageId, sent_to_cliq_at: $sentAt, cliq_channel_name: $channelName }
     ) {
       id
     }
@@ -137,10 +137,11 @@ export class EodReportService {
 
       // 3. Save to eod_reports table
       const insertData = await hasuraQuery<{
-        insert_eod_reports_one: { id: string };
+        insert_eod_reports_one: { id: number };
       }>(INSERT_EOD_REPORT_MUTATION, {
         object: {
-          user_id: input.userId,
+          manager_id: input.userId,
+          manager_name: userName,
           report_date: input.reportDate,
           win_loss: input.winLoss,
           psas_signed: input.psasSigned,
@@ -152,7 +153,7 @@ export class EodReportService {
           follow_ups_neutral: input.followUpsNeutral,
           follow_ups_bad: input.followUpsBad,
           bookings_completed: input.bookingsCompleted,
-          offers_presented: input.offersPresented,
+          offers_presented_total: input.offersPresented,
           leads_converted: input.leadsConverted,
         },
       });
@@ -166,16 +167,18 @@ export class EodReportService {
       const cliqMessageId = await sendToZohoCliq(message);
 
       // 6. Update report with Cliq info
+      const channelName = "selleradvisors";
       await hasuraQuery(UPDATE_EOD_REPORT_CLIQ_MUTATION, {
         id: reportId,
         cliqMessageId,
         sentAt: new Date().toISOString(),
+        channelName,
       });
 
       // 7. Return success
       return {
         success: true,
-        reportId,
+        reportId: String(reportId),
         cliqMessageId,
       };
     } catch (error: any) {

@@ -50,7 +50,7 @@ const UPSERT_EOD_REPORT_MUTATION = `
 `;
 
 const UPDATE_EOD_REPORT_CLIQ_MUTATION = `
-  mutation UpdateEodReportCliq($id: Int!, $cliqMessageId: String!, $sentAt: timestamptz!, $channelName: String!) {
+  mutation UpdateEodReportCliq($id: Int!, $cliqMessageId: String!, $sentAt: timestamp!, $channelName: String!) {
     update_eod_reports_by_pk(
       pk_columns: { id: $id }
       _set: { cliq_message_id: $cliqMessageId, sent_to_cliq_at: $sentAt, cliq_channel_name: $channelName }

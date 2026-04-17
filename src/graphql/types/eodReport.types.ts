@@ -17,8 +17,17 @@ export const eodReportTypeDefs = `#graphql
     followUpsNeutral: Int!
     followUpsBad: Int!
     bookingsCompleted: Int!
+    bookingsAmazing: Int!
+    bookingsGood: Int!
+    bookingsNeutral: Int!
+    bookingsBad: Int!
     offersPresented: Int!
+    offersPresentedAmazing: Int!
+    offersPresentedGood: Int!
+    offersPresentedNeutral: Int!
+    offersPresentedBad: Int!
     leadsConverted: Int!
+    notes: String
   }
 
   type EodReportResult {

@@ -18,8 +18,17 @@ interface EodReportInput {
   followUpsNeutral: number;
   followUpsBad: number;
   bookingsCompleted: number;
+  bookingsAmazing: number;
+  bookingsGood: number;
+  bookingsNeutral: number;
+  bookingsBad: number;
   offersPresented: number;
+  offersPresentedAmazing: number;
+  offersPresentedGood: number;
+  offersPresentedNeutral: number;
+  offersPresentedBad: number;
   leadsConverted: number;
+  notes?: string;
 }
 
 interface EodReportResult {
@@ -40,7 +49,9 @@ const UPSERT_EOD_REPORT_MUTATION = `
         update_columns: [
           win_loss, psas_signed, offers_accepted, psa_sent,
           follow_ups_total, follow_ups_amazing, follow_ups_good, follow_ups_neutral, follow_ups_bad,
-          bookings_completed, offers_presented_total, leads_converted, manager_name
+          bookings_completed,
+          offers_presented_total, offers_presented_amazing, offers_presented_good, offers_presented_neutral, offers_presented_bad,
+          leads_converted, manager_name, notes
         ]
       }
     ) {
@@ -87,18 +98,50 @@ function formatDate(dateString: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+function buildBreakdown(amazing: number, good: number, neutral: number, bad: number): string {
+  const parts: string[] = [];
+  if (amazing > 0) parts.push(`${amazing} Amazing`);
+  if (good > 0) parts.push(`${good} Good`);
+  if (neutral > 0) parts.push(`${neutral} Neutral`);
+  if (bad > 0) parts.push(`${bad} Bad`);
+  return parts.length > 0 ? ` (${parts.join(", ")})` : "";
+}
+
 function buildCliqMessage(input: EodReportInput, userName: string): string {
   const emoji = input.winLoss === "WIN" ? "🟢 WIN" : "🔴 LOSS";
   const formattedDate = formatDate(input.reportDate);
 
-  return `${emoji} — ${userName} Recap ${formattedDate}:
-PSAs SIGNED: ${input.psasSigned}
-OFFERS ACCEPTED: ${input.offersAccepted}
-PSA Sent: ${input.psaSent}
-Follow Ups: (${input.followUpsTotal}) (${input.followUpsAmazing} Amazing, ${input.followUpsGood} Good, ${input.followUpsNeutral} Neutral, ${input.followUpsBad} Bad)
-Bookings Completed: ${input.bookingsCompleted}
-Offers Presented: (${input.offersPresented})
-Leads Converted: ${input.leadsConverted}`;
+  const lines: string[] = [`${emoji} — ${userName} Recap ${formattedDate}:`];
+
+  if (input.psasSigned > 0) {
+    lines.push(`PSAs SIGNED: ${input.psasSigned}`);
+  }
+  if (input.offersAccepted > 0) {
+    lines.push(`OFFERS ACCEPTED: ${input.offersAccepted}`);
+  }
+  if (input.psaSent > 0) {
+    lines.push(`PSA Sent: ${input.psaSent}`);
+  }
+  if (input.followUpsTotal > 0) {
+    const breakdown = buildBreakdown(input.followUpsAmazing, input.followUpsGood, input.followUpsNeutral, input.followUpsBad);
+    lines.push(`Follow Ups: (${input.followUpsTotal})${breakdown}`);
+  }
+  if (input.bookingsCompleted > 0) {
+    const breakdown = buildBreakdown(input.bookingsAmazing, input.bookingsGood, input.bookingsNeutral, input.bookingsBad);
+    lines.push(`Bookings Completed: (${input.bookingsCompleted})${breakdown}`);
+  }
+  if (input.offersPresented > 0) {
+    const breakdown = buildBreakdown(input.offersPresentedAmazing, input.offersPresentedGood, input.offersPresentedNeutral, input.offersPresentedBad);
+    lines.push(`Offers Presented: (${input.offersPresented})${breakdown}`);
+  }
+  if (input.leadsConverted > 0) {
+    lines.push(`Leads Converted: ${input.leadsConverted}`);
+  }
+  if (input.notes) {
+    lines.push(`\n📝 ${input.notes}`);
+  }
+
+  return lines.join("\n");
 }
 
 async function sendToZohoCliq(message: string, channelName = "selleradvisors"): Promise<string> {
@@ -153,7 +196,12 @@ export class EodReportService {
           follow_ups_bad: input.followUpsBad,
           bookings_completed: input.bookingsCompleted,
           offers_presented_total: input.offersPresented,
+          offers_presented_amazing: input.offersPresentedAmazing,
+          offers_presented_good: input.offersPresentedGood,
+          offers_presented_neutral: input.offersPresentedNeutral,
+          offers_presented_bad: input.offersPresentedBad,
           leads_converted: input.leadsConverted,
+          notes: input.notes ?? null,
         },
       });
 

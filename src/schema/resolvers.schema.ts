@@ -16,6 +16,7 @@ import { transactionCoordinatorResolvers } from '../graphql/resolvers/transactio
 import { contactHistoryResolvers } from '../graphql/resolvers/contactHistory.resolvers';
 import { performanceGoalsResolvers } from '../graphql/resolvers/performanceGoals.resolvers';
 import { leadManagementResolvers } from '../graphql/resolvers/leadManagement.resolvers';
+import { eodReportResolvers } from '../graphql/resolvers/eodReport.resolvers';
 
 export default {
     Query: {
@@ -39,7 +40,9 @@ export default {
         ...leadManagementResolvers.Query,
     },
     Mutation: {
+        _empty: () => "empty",
         ...genericMutationResolvers.Mutation,
         ...leadManagementResolvers.Mutation,
+        ...eodReportResolvers.Mutation,
     },
 };

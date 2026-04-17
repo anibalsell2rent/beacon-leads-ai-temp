@@ -17,9 +17,14 @@ import { transactionCoordinatorTypeDefs } from '../graphql/types/transactionCoor
 import { contactHistoryTypeDefs } from '../graphql/types/contactHistory.types';
 import { performanceGoalsTypeDefs } from '../graphql/types/performanceGoals.types';
 import { leadManagementTypeDefs } from '../graphql/types/leadManagement.types';
+import { eodReportTypeDefs } from '../graphql/types/eodReport.types';
 
 const rootTypeDefs = gql`
 type Query {
+  _empty: String
+}
+
+type Mutation {
   _empty: String
 }
 `;
@@ -43,5 +48,6 @@ export default [
   transactionCoordinatorTypeDefs,
   contactHistoryTypeDefs,
   performanceGoalsTypeDefs,
-  leadManagementTypeDefs
+  leadManagementTypeDefs,
+  eodReportTypeDefs
 ];

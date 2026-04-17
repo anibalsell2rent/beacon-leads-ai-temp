@@ -9,25 +9,25 @@ interface EodReportInput {
   userId: number;
   reportDate: string;
   winLoss: WinLoss;
-  psasSigned: number;
-  offersAccepted: number;
-  psaSent: number;
-  followUpsTotal: number;
-  followUpsAmazing: number;
-  followUpsGood: number;
-  followUpsNeutral: number;
-  followUpsBad: number;
-  bookingsCompleted: number;
-  bookingsAmazing: number;
-  bookingsGood: number;
-  bookingsNeutral: number;
-  bookingsBad: number;
-  offersPresented: number;
-  offersPresentedAmazing: number;
-  offersPresentedGood: number;
-  offersPresentedNeutral: number;
-  offersPresentedBad: number;
-  leadsConverted: number;
+  psasSigned?: number;
+  offersAccepted?: number;
+  psaSent?: number;
+  followUpsTotal?: number;
+  followUpsAmazing?: number;
+  followUpsGood?: number;
+  followUpsNeutral?: number;
+  followUpsBad?: number;
+  bookingsCompleted?: number;
+  bookingsAmazing?: number;
+  bookingsGood?: number;
+  bookingsNeutral?: number;
+  bookingsBad?: number;
+  offersPresented?: number;
+  offersPresentedAmazing?: number;
+  offersPresentedGood?: number;
+  offersPresentedNeutral?: number;
+  offersPresentedBad?: number;
+  leadsConverted?: number;
   notes?: string;
 }
 
@@ -113,29 +113,49 @@ function buildCliqMessage(input: EodReportInput, userName: string): string {
 
   const lines: string[] = [`${emoji} — ${userName} Recap ${formattedDate}:`];
 
-  if (input.psasSigned > 0) {
-    lines.push(`PSAs SIGNED: ${input.psasSigned}`);
+  const psasSigned = input.psasSigned ?? 0;
+  const offersAccepted = input.offersAccepted ?? 0;
+  const psaSent = input.psaSent ?? 0;
+  const followUpsTotal = input.followUpsTotal ?? 0;
+  const followUpsAmazing = input.followUpsAmazing ?? 0;
+  const followUpsGood = input.followUpsGood ?? 0;
+  const followUpsNeutral = input.followUpsNeutral ?? 0;
+  const followUpsBad = input.followUpsBad ?? 0;
+  const bookingsCompleted = input.bookingsCompleted ?? 0;
+  const bookingsAmazing = input.bookingsAmazing ?? 0;
+  const bookingsGood = input.bookingsGood ?? 0;
+  const bookingsNeutral = input.bookingsNeutral ?? 0;
+  const bookingsBad = input.bookingsBad ?? 0;
+  const offersPresented = input.offersPresented ?? 0;
+  const offersPresentedAmazing = input.offersPresentedAmazing ?? 0;
+  const offersPresentedGood = input.offersPresentedGood ?? 0;
+  const offersPresentedNeutral = input.offersPresentedNeutral ?? 0;
+  const offersPresentedBad = input.offersPresentedBad ?? 0;
+  const leadsConverted = input.leadsConverted ?? 0;
+
+  if (psasSigned > 0) {
+    lines.push(`PSAs SIGNED: ${psasSigned}`);
   }
-  if (input.offersAccepted > 0) {
-    lines.push(`OFFERS ACCEPTED: ${input.offersAccepted}`);
+  if (offersAccepted > 0) {
+    lines.push(`OFFERS ACCEPTED: ${offersAccepted}`);
   }
-  if (input.psaSent > 0) {
-    lines.push(`PSA Sent: ${input.psaSent}`);
+  if (psaSent > 0) {
+    lines.push(`PSA Sent: ${psaSent}`);
   }
-  if (input.followUpsTotal > 0) {
-    const breakdown = buildBreakdown(input.followUpsAmazing, input.followUpsGood, input.followUpsNeutral, input.followUpsBad);
-    lines.push(`Follow Ups: (${input.followUpsTotal})${breakdown}`);
+  if (followUpsTotal > 0) {
+    const breakdown = buildBreakdown(followUpsAmazing, followUpsGood, followUpsNeutral, followUpsBad);
+    lines.push(`Follow Ups: (${followUpsTotal})${breakdown}`);
   }
-  if (input.bookingsCompleted > 0) {
-    const breakdown = buildBreakdown(input.bookingsAmazing, input.bookingsGood, input.bookingsNeutral, input.bookingsBad);
-    lines.push(`Bookings Completed: (${input.bookingsCompleted})${breakdown}`);
+  if (bookingsCompleted > 0) {
+    const breakdown = buildBreakdown(bookingsAmazing, bookingsGood, bookingsNeutral, bookingsBad);
+    lines.push(`Bookings Completed: (${bookingsCompleted})${breakdown}`);
   }
-  if (input.offersPresented > 0) {
-    const breakdown = buildBreakdown(input.offersPresentedAmazing, input.offersPresentedGood, input.offersPresentedNeutral, input.offersPresentedBad);
-    lines.push(`Offers Presented: (${input.offersPresented})${breakdown}`);
+  if (offersPresented > 0) {
+    const breakdown = buildBreakdown(offersPresentedAmazing, offersPresentedGood, offersPresentedNeutral, offersPresentedBad);
+    lines.push(`Offers Presented: (${offersPresented})${breakdown}`);
   }
-  if (input.leadsConverted > 0) {
-    lines.push(`Leads Converted: ${input.leadsConverted}`);
+  if (leadsConverted > 0) {
+    lines.push(`Leads Converted: ${leadsConverted}`);
   }
   if (input.notes) {
     lines.push(`\n📝 ${input.notes}`);
@@ -186,21 +206,21 @@ export class EodReportService {
           manager_name: userName,
           report_date: input.reportDate,
           win_loss: input.winLoss,
-          psas_signed: input.psasSigned,
-          offers_accepted: input.offersAccepted,
-          psa_sent: input.psaSent,
-          follow_ups_total: input.followUpsTotal,
-          follow_ups_amazing: input.followUpsAmazing,
-          follow_ups_good: input.followUpsGood,
-          follow_ups_neutral: input.followUpsNeutral,
-          follow_ups_bad: input.followUpsBad,
-          bookings_completed: input.bookingsCompleted,
-          offers_presented_total: input.offersPresented,
-          offers_presented_amazing: input.offersPresentedAmazing,
-          offers_presented_good: input.offersPresentedGood,
-          offers_presented_neutral: input.offersPresentedNeutral,
-          offers_presented_bad: input.offersPresentedBad,
-          leads_converted: input.leadsConverted,
+          psas_signed: input.psasSigned ?? 0,
+          offers_accepted: input.offersAccepted ?? 0,
+          psa_sent: input.psaSent ?? 0,
+          follow_ups_total: input.followUpsTotal ?? 0,
+          follow_ups_amazing: input.followUpsAmazing ?? 0,
+          follow_ups_good: input.followUpsGood ?? 0,
+          follow_ups_neutral: input.followUpsNeutral ?? 0,
+          follow_ups_bad: input.followUpsBad ?? 0,
+          bookings_completed: input.bookingsCompleted ?? 0,
+          offers_presented_total: input.offersPresented ?? 0,
+          offers_presented_amazing: input.offersPresentedAmazing ?? 0,
+          offers_presented_good: input.offersPresentedGood ?? 0,
+          offers_presented_neutral: input.offersPresentedNeutral ?? 0,
+          offers_presented_bad: input.offersPresentedBad ?? 0,
+          leads_converted: input.leadsConverted ?? 0,
           notes: input.notes ?? null,
         },
       });

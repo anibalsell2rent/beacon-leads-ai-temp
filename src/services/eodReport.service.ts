@@ -31,9 +31,19 @@ interface EodReportResult {
 
 // ─── Hasura Mutations ──────────────────────────────────────────────────────────
 
-const INSERT_EOD_REPORT_MUTATION = `
-  mutation InsertEodReport($object: eod_reports_insert_input!) {
-    insert_eod_reports_one(object: $object) {
+const UPSERT_EOD_REPORT_MUTATION = `
+  mutation UpsertEodReport($object: eod_reports_insert_input!) {
+    insert_eod_reports_one(
+      object: $object
+      on_conflict: {
+        constraint: eod_reports_manager_id_report_date_key
+        update_columns: [
+          win_loss, psas_signed, offers_accepted, psa_sent,
+          follow_ups_total, follow_ups_amazing, follow_ups_good, follow_ups_neutral, follow_ups_bad,
+          bookings_completed, offers_presented_total, leads_converted, manager_name
+        ]
+      }
+    ) {
       id
     }
   }
@@ -124,10 +134,10 @@ export class EodReportService {
       const lastName = userData.users_by_pk?.last_name ?? "";
       const userName = `${firstName} ${lastName}`.trim() || `User ${input.userId}`;
 
-      // 3. Save to eod_reports table
+      // 3. Upsert to eod_reports table
       const insertData = await hasuraQuery<{
         insert_eod_reports_one: { id: number };
-      }>(INSERT_EOD_REPORT_MUTATION, {
+      }>(UPSERT_EOD_REPORT_MUTATION, {
         object: {
           manager_id: input.userId,
           manager_name: userName,

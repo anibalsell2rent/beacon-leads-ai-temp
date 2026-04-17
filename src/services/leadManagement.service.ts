@@ -122,7 +122,7 @@ const USER_BY_SLUG_QUERY = `
 const MANAGER_LEADS_QUERY = `
   query GetManagerLeads($managerId: Int!, $trackingDate: date!) {
     hotLeads: manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" }, tracking_date: { _eq: $trackingDate } }
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" } }
       order_by: { added_at: desc }
     ) {
       lead_id tab added_at tracking_date
@@ -136,7 +136,7 @@ const MANAGER_LEADS_QUERY = `
       }
     }
     liveOffers: manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" }, tracking_date: { _eq: $trackingDate } }
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" } }
       order_by: { added_at: desc }
     ) {
       lead_id tab added_at tracking_date

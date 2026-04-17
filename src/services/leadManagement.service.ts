@@ -122,10 +122,10 @@ const USER_BY_SLUG_QUERY = `
 const MANAGER_LEADS_QUERY = `
   query GetManagerLeads($managerId: Int!, $trackingDate: date!) {
     hotLeads: manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" } }
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "HOT_LEAD" }, is_active: { _eq: true } }
       order_by: { added_at: desc }
     ) {
-      lead_id tab added_at tracking_date
+      id lead_id tab added_at tracking_date is_active
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
@@ -136,10 +136,10 @@ const MANAGER_LEADS_QUERY = `
       }
     }
     liveOffers: manager_lead_tracking(
-      where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" } }
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: "LIVE_OFFER" }, is_active: { _eq: true } }
       order_by: { added_at: desc }
     ) {
-      lead_id tab added_at tracking_date
+      id lead_id tab added_at tracking_date is_active
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
@@ -153,7 +153,7 @@ const MANAGER_LEADS_QUERY = `
       where: { manager_id: { _eq: $managerId }, tab: { _eq: "PIPELINE_FOLLOW_UP" }, tracking_date: { _eq: $trackingDate } }
       order_by: { added_at: desc }
     ) {
-      lead_id tab added_at tracking_date
+      id lead_id tab added_at tracking_date is_active
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
@@ -167,7 +167,7 @@ const MANAGER_LEADS_QUERY = `
       where: { manager_id: { _eq: $managerId }, tab: { _eq: "NEW_LEAD" }, tracking_date: { _eq: $trackingDate } }
       order_by: { added_at: desc }
     ) {
-      lead_id tab added_at tracking_date
+      id lead_id tab added_at tracking_date is_active
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
@@ -198,6 +198,29 @@ const LEAD_TABS_QUERY = `
       where: { lead_id: { _in: $leadIds }, manager_id: { _eq: $managerId }, tracking_date: { _eq: $trackingDate } }
     ) {
       lead_id tab
+    }
+  }
+`;
+
+const PRIORITY_PANEL_HISTORY_QUERY = `
+  query GetPriorityPanelHistory($managerId: Int!, $tab: String!, $trackingDate: date!) {
+    manager_lead_tracking(
+      where: { 
+        manager_id: { _eq: $managerId }, 
+        tab: { _eq: $tab }, 
+        tracking_date: { _eq: $trackingDate } 
+      }
+      order_by: { added_at: desc }
+    ) {
+      id lead_id tab added_at tracking_date is_active
+      crm_lead {
+        id zoho_lead_id lead_team_rating stage_id date_created updated_at
+        lead_final_score s2r_net_revenue seller_segment marketing_source
+        seller_manager_id
+        seller_manager { id first_name last_name }
+        crm_seller { first_name last_name email phone }
+        property { address city state zip_code }
+      }
     }
   }
 `;
@@ -356,6 +379,22 @@ const REMOVE_LEAD_FROM_TAB_MUTATION = `
         tab: { _eq: $tab }
         tracking_date: { _eq: $trackingDate }
       }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+const DEACTIVATE_LEAD_FROM_TAB_MUTATION = `
+  mutation DeactivateLeadFromTab($managerId: Int!, $leadId: uuid!, $tab: String!) {
+    update_manager_lead_tracking(
+      where: {
+        manager_id: { _eq: $managerId }
+        lead_id: { _eq: $leadId }
+        tab: { _eq: $tab }
+        is_active: { _eq: true }
+      }
+      _set: { is_active: false }
     ) {
       affected_rows
     }
@@ -669,6 +708,23 @@ static async searchSellersForTab(
     return (data.crm_leads ?? []).map((lead: any) => mapLead(lead));
   }
 
+  static async getPriorityPanelHistory(
+    managerId: number,
+    tab: LeadTab,
+    trackingDate: string
+  ): Promise<Lead[]> {
+    const data = await hasuraQuery<any>(PRIORITY_PANEL_HISTORY_QUERY, {
+      managerId,
+      tab,
+      trackingDate,
+    });
+
+    const trackingRecords = data.manager_lead_tracking ?? [];
+    return trackingRecords
+      .filter((record: any) => record.crm_lead)
+      .map((record: any) => mapLead(record.crm_lead, [record.tab]));
+  }
+
   static async getLeads(managerId?: number, stageId?: string, limitPerStage = 50, offsetPerStage = 0): Promise<Lead[]> {
     const stageIds = stageId ? [stageId] : Object.keys(STAGE_SLUG_MAP);
 
@@ -714,20 +770,32 @@ static async searchSellersForTab(
     trackingDate?: string
   ): Promise<boolean> {
     const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
+    
+    // For HOT_LEAD and LIVE_OFFER, deactivate instead of delete to preserve history
+    if (tab === "HOT_LEAD" || tab === "LIVE_OFFER") {
+      const data = await hasuraQuery<any>(DEACTIVATE_LEAD_FROM_TAB_MUTATION, {
+        managerId,
+        leadId,
+        tab,
+      });
+      const deactivated = (data.update_manager_lead_tracking?.affected_rows ?? 0) > 0;
+
+      // Update is_hot when deactivating from HOT_LEAD tab
+      if (deactivated && tab === "HOT_LEAD") {
+        await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot: false });
+      }
+
+      return deactivated;
+    }
+
+    // For other tabs, delete the record
     const data = await hasuraQuery<any>(REMOVE_LEAD_FROM_TAB_MUTATION, {
       managerId,
       leadId,
       tab,
       trackingDate: dateToUse,
     });
-    const removed = (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
-
-    // Update is_hot when removing from HOT_LEAD tab
-    if (removed && tab === "HOT_LEAD") {
-      await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot: false });
-    }
-
-    return removed;
+    return (data.delete_manager_lead_tracking?.affected_rows ?? 0) > 0;
   }
 
   static async updateLeadRating(

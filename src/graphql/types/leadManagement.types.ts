@@ -94,6 +94,12 @@ export const leadManagementTypeDefs = gql`
 
     getPriorityPanelLeads(managerId: Int!, trackingDate: String): ManagerLeadsResponse!
 
+    getPriorityPanelHistory(
+      managerId: Int!
+      tab: LeadTab!
+      trackingDate: String!
+    ): [Lead!]!
+
     searchLeads(
       query: String!
       limit: Int = 20

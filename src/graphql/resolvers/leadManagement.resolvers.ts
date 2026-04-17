@@ -39,6 +39,18 @@ export const leadManagementResolvers = {
       }
     },
 
+    getPriorityPanelHistory: async (
+      _: any,
+      { managerId, tab, trackingDate }: { managerId: number; tab: LeadTab; trackingDate: string }
+    ) => {
+      try {
+        return await LeadManagementService.getPriorityPanelHistory(managerId, tab, trackingDate);
+      } catch (error: any) {
+        console.error("[LeadManagement] Error getPriorityPanelHistory:", error);
+        throw new Error(`Failed to fetch priority panel history: ${error.message}`);
+      }
+    },
+
     searchLeads: async (
       _: any,
       { query, limit = 20 }: { query: string; limit?: number }

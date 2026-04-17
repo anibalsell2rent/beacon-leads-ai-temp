@@ -29,15 +29,6 @@ interface EodReportResult {
   error?: string;
 }
 
-// ─── Zoho Token ────────────────────────────────────────────────────────────────
-
-const zohoToken = async (): Promise<string> => {
-  const request = await axios.get("https://zohotoken-663034886613.us-central1.run.app/api/zoho/token");
-  const token = (request.data as { token?: string }).token;
-  if (!token) throw new Error("Zoho token not found");
-  return token;
-};
-
 // ─── Hasura Mutations ──────────────────────────────────────────────────────────
 
 const INSERT_EOD_REPORT_MUTATION = `
@@ -100,22 +91,20 @@ Offers Presented: (${input.offersPresented})
 Leads Converted: ${input.leadsConverted}`;
 }
 
-async function sendToZohoCliq(message: string): Promise<string> {
-  const token = await zohoToken();
-  const channelUniqueName = "selleradvisors";
+async function sendToZohoCliq(message: string, channelName = "selleradvisors"): Promise<string> {
+  const ZOHO_CLIQ_FUNCTION_URL = "https://www.zohoapis.com/crm/v7/functions/sa_cliq_channel_message/actions/execute";
+  const ZOHO_API_KEY = "1003.23ca1b7ff6f39c31b3a8efe66761183c.b73486f7dddc13b7717f09892da9679e";
 
-  const response = await axios.post(
-    `https://cliq.zoho.com/api/v2/channelsbyname/${channelUniqueName}/message`,
-    { text: message },
-    {
-      headers: {
-        Authorization: `Zoho-oauthtoken ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await axios.get(ZOHO_CLIQ_FUNCTION_URL, {
+    params: {
+      auth_type: "apikey",
+      zapikey: ZOHO_API_KEY,
+      channel_name: channelName,
+      channel_message: message,
+    },
+  });
 
-  return response.data?.id ?? response.data?.message_id ?? "sent";
+  return response.data?.details?.id ?? response.data?.message_id ?? "sent";
 }
 
 // ─── Service ───────────────────────────────────────────────────────────────────

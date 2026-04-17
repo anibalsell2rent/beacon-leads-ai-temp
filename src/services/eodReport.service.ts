@@ -94,8 +94,10 @@ function validateBreakdowns(input: EodReportInput): void {
 }
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  // Parse date parts directly to avoid timezone conversion issues
+  const [year, month, day] = dateString.split("-").map(Number);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[month - 1]} ${day}, ${year}`;
 }
 
 function buildBreakdown(amazing: number, good: number, neutral: number, bad: number): string {

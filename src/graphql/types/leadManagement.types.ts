@@ -52,6 +52,7 @@ export const leadManagementTypeDefs = gql`
     marketingSource: String
     dateCreated: String
     updatedAt: String
+    isHot: Boolean!
     tabs: [LeadTab!]!
     notes: [LeadNote!]!
   }

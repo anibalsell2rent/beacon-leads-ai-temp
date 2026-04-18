@@ -129,7 +129,7 @@ const MANAGER_LEADS_QUERY = `
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
-        seller_manager_id
+        seller_manager_id is_hot
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone }
         property { address city state zip_code }
@@ -143,7 +143,7 @@ const MANAGER_LEADS_QUERY = `
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
-        seller_manager_id
+        seller_manager_id is_hot
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone }
         property { address city state zip_code }
@@ -157,7 +157,7 @@ const MANAGER_LEADS_QUERY = `
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
-        seller_manager_id
+        seller_manager_id is_hot
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone }
         property { address city state zip_code }
@@ -171,7 +171,7 @@ const MANAGER_LEADS_QUERY = `
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
-        seller_manager_id
+        seller_manager_id is_hot
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone }
         property { address city state zip_code }
@@ -216,7 +216,7 @@ const PRIORITY_PANEL_HISTORY_QUERY = `
       crm_lead {
         id zoho_lead_id lead_team_rating stage_id date_created updated_at
         lead_final_score s2r_net_revenue seller_segment marketing_source
-        seller_manager_id
+        seller_manager_id is_hot
         seller_manager { id first_name last_name }
         crm_seller { first_name last_name email phone }
         property { address city state zip_code }
@@ -496,6 +496,7 @@ leadTeamRating: lead.lead_team_rating?.toUpperCase() as LeadTeamRating | null,
     marketingSource: lead.marketing_source,
     dateCreated: lead.date_created,
     updatedAt: lead.updated_at,
+    isHot: lead.is_hot ?? false,
     tabs,
     notes,
   };

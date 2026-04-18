@@ -411,6 +411,22 @@ const DEACTIVATE_LEAD_FROM_TAB_MUTATION = `
   }
 `;
 
+const REACTIVATE_LEAD_IN_TAB_MUTATION = `
+  mutation ReactivateLeadInTab($managerId: Int!, $leadId: uuid!, $tab: String!) {
+    update_manager_lead_tracking(
+      where: {
+        manager_id: { _eq: $managerId }
+        lead_id: { _eq: $leadId }
+        tab: { _eq: $tab }
+        is_active: { _eq: false }
+      }
+      _set: { is_active: true }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
 const UPDATE_LEAD_RATING_MUTATION = `
   mutation UpdateLeadRating($leadId: uuid!, $rating: String) {
     update_crm_leads_by_pk(
@@ -775,7 +791,23 @@ static async searchSellersForTab(
     trackingDate?: string
   ): Promise<Lead> {
     const dateToUse = trackingDate ?? new Date().toISOString().split("T")[0];
-    await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab, trackingDate: dateToUse });
+    
+    // For HOT_LEAD and LIVE_OFFER, first try to reactivate an existing deactivated record
+    if (tab === "HOT_LEAD" || tab === "LIVE_OFFER") {
+      const reactivateResult = await hasuraQuery<any>(REACTIVATE_LEAD_IN_TAB_MUTATION, {
+        managerId,
+        leadId,
+        tab,
+      });
+      const reactivated = (reactivateResult.update_manager_lead_tracking?.affected_rows ?? 0) > 0;
+      
+      // If no existing record was reactivated, insert a new one
+      if (!reactivated) {
+        await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab, trackingDate: dateToUse });
+      }
+    } else {
+      await hasuraQuery<any>(ADD_LEAD_TO_TAB_MUTATION, { managerId, leadId, tab, trackingDate: dateToUse });
+    }
 
     // Update is_hot when adding to HOT_LEAD tab
     if (tab === "HOT_LEAD") {
@@ -832,26 +864,20 @@ static async searchSellersForTab(
   }
 
   static async updateLeadIsHot(leadId: string, isHot: boolean, managerId: number): Promise<Lead> {
-    console.log("[v0] updateLeadIsHot called:", { leadId, isHot, managerId });
-    
     // Update is_hot in crm_leads
-    const updateResult = await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot });
-    console.log("[v0] UPDATE_LEAD_IS_HOT_MUTATION result:", JSON.stringify(updateResult));
+    await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot });
 
     // Update manager_lead_tracking
     if (isHot) {
-      // Add to HOT_LEAD tab (will handle duplicates via upsert)
-      console.log("[v0] Adding lead to HOT_LEAD tab");
+      // Add to HOT_LEAD tab (will reactivate existing or insert new)
       await this.addLeadToTab(managerId, leadId, "HOT_LEAD");
     } else {
       // Deactivate from HOT_LEAD tab
-      console.log("[v0] Deactivating lead from HOT_LEAD tab");
-      const deactivateResult = await hasuraQuery<any>(DEACTIVATE_LEAD_FROM_TAB_MUTATION, {
+      await hasuraQuery<any>(DEACTIVATE_LEAD_FROM_TAB_MUTATION, {
         managerId,
         leadId,
         tab: "HOT_LEAD",
       });
-      console.log("[v0] DEACTIVATE result:", JSON.stringify(deactivateResult));
     }
 
     return this.getLeadById(leadId);

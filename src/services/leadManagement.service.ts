@@ -242,7 +242,7 @@ const SEARCH_LEADS_QUERY = `
       order_by: { date_created: desc }
     ) {
       id lead_team_rating stage_id date_created updated_at
-      seller_manager_id
+      seller_manager_id is_hot
       crm_seller {
         first_name last_name email phone address city state zip_code
       }
@@ -269,7 +269,7 @@ const SEARCH_SELLERS_FOR_TAB_QUERY = `
     ) {
       id zoho_lead_id lead_team_rating stage_id date_created updated_at
       lead_final_score s2r_net_revenue seller_segment marketing_source
-      seller_manager_id
+      seller_manager_id is_hot
       seller_manager { id first_name last_name }
       crm_seller { first_name last_name email phone }
       property { address city state zip_code }
@@ -297,7 +297,7 @@ const GET_LEADS_BY_STAGE_QUERY = `
     ) {
       id zoho_lead_id lead_team_rating stage_id date_created updated_at
       lead_final_score s2r_net_revenue seller_segment marketing_source
-      seller_manager_id
+      seller_manager_id is_hot
       seller_manager { id first_name last_name }
       crm_seller { first_name last_name email phone }
       property { address city state zip_code }
@@ -315,7 +315,7 @@ const GET_LEADS_BY_MANAGER_AND_STAGE_QUERY = `
     ) {
       id zoho_lead_id lead_team_rating stage_id date_created updated_at
       lead_final_score s2r_net_revenue seller_segment marketing_source
-      seller_manager_id
+      seller_manager_id is_hot
       seller_manager { id first_name last_name }
       crm_seller { first_name last_name email phone }
       property { address city state zip_code }
@@ -328,7 +328,7 @@ const LEAD_BY_ID_QUERY = `
     crm_leads_by_pk(id: $leadId) {
       id zoho_lead_id lead_team_rating stage_id date_created updated_at
       lead_final_score s2r_net_revenue seller_segment marketing_source
-      seller_manager_id
+      seller_manager_id is_hot
       seller_manager { id first_name last_name }
       crm_seller { first_name last_name email phone }
       property { address city state zip_code }

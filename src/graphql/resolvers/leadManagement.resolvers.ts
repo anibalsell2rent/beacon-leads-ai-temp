@@ -127,10 +127,10 @@ export const leadManagementResolvers = {
 
     updateLeadIsHot: async (
       _: any,
-      { leadId, isHot }: { leadId: string; isHot: boolean }
+      { leadId, isHot, managerId }: { leadId: string; isHot: boolean; managerId: number }
     ) => {
       try {
-        return await LeadManagementService.updateLeadIsHot(leadId, isHot);
+        return await LeadManagementService.updateLeadIsHot(leadId, isHot, managerId);
       } catch (error: any) {
         console.error("[LeadManagement] Error updateLeadIsHot:", error);
         throw new Error(`Failed to update lead is_hot: ${error.message}`);

@@ -145,6 +145,7 @@ export const leadManagementTypeDefs = gql`
     updateLeadIsHot(
       leadId: String!
       isHot: Boolean!
+      managerId: Int!
     ): Lead!
 
     addLeadNote(

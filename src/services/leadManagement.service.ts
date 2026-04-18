@@ -810,8 +810,23 @@ static async searchSellersForTab(
     return this.getLeadById(leadId);
   }
 
-  static async updateLeadIsHot(leadId: string, isHot: boolean): Promise<Lead> {
+  static async updateLeadIsHot(leadId: string, isHot: boolean, managerId: number): Promise<Lead> {
+    // Update is_hot in crm_leads
     await hasuraQuery<any>(UPDATE_LEAD_IS_HOT_MUTATION, { leadId, isHot });
+
+    // Update manager_lead_tracking
+    if (isHot) {
+      // Add to HOT_LEAD tab (will handle duplicates via upsert)
+      await this.addLeadToTab(managerId, leadId, "HOT_LEAD");
+    } else {
+      // Deactivate from HOT_LEAD tab
+      await hasuraQuery<any>(DEACTIVATE_LEAD_FROM_TAB_MUTATION, {
+        managerId,
+        leadId,
+        tab: "HOT_LEAD",
+      });
+    }
+
     return this.getLeadById(leadId);
   }
 

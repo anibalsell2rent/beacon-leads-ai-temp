@@ -287,6 +287,16 @@ const LEADS_IN_TAB_QUERY = `
   }
 `;
 
+const LEADS_IN_TAB_ACTIVE_QUERY = `
+  query GetLeadsInTabActive($managerId: Int!, $tab: String!) {
+    manager_lead_tracking(
+      where: { manager_id: { _eq: $managerId }, tab: { _eq: $tab }, is_active: { _eq: true } }
+    ) {
+      lead_id
+    }
+  }
+`;
+
 const GET_LEADS_BY_STAGE_QUERY = `
   query GetLeadsByStage($stageId: uuid!, $limit: Int!, $offset: Int!) {
     crm_leads(
@@ -688,13 +698,24 @@ static async searchSellersForTab(
     const firstName = parts.length > 1 ? `%${parts[0]}%` : `%${query}%`;
     const lastName = parts.length > 1 ? `%${parts.slice(1).join(" ")}%` : `%${query}%`;
 
-    // Get leads already in this tab for this manager/date
-    const existingData = await hasuraQuery<any>(LEADS_IN_TAB_QUERY, {
-      managerId,
-      tab,
-      trackingDate: dateToUse,
-    });
-    const excludeLeadIds = (existingData.manager_lead_tracking ?? []).map((t: any) => t.lead_id);
+    // Get leads already in this tab for this manager
+    // For HOT_LEAD and LIVE_OFFER, use is_active filter (no date filter)
+    // For other tabs, use date filter
+    let excludeLeadIds: string[] = [];
+    if (tab === "HOT_LEAD" || tab === "LIVE_OFFER") {
+      const existingData = await hasuraQuery<any>(LEADS_IN_TAB_ACTIVE_QUERY, {
+        managerId,
+        tab,
+      });
+      excludeLeadIds = (existingData.manager_lead_tracking ?? []).map((t: any) => t.lead_id);
+    } else {
+      const existingData = await hasuraQuery<any>(LEADS_IN_TAB_QUERY, {
+        managerId,
+        tab,
+        trackingDate: dateToUse,
+      });
+      excludeLeadIds = (existingData.manager_lead_tracking ?? []).map((t: any) => t.lead_id);
+    }
 
     // Search for leads excluding those already in the tab, filtered by seller_manager_id
     const data = await hasuraQuery<any>(SEARCH_SELLERS_FOR_TAB_QUERY, {
